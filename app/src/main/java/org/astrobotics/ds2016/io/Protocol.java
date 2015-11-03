@@ -1,9 +1,14 @@
 package org.astrobotics.ds2016.io;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -13,26 +18,32 @@ import android.view.MotionEvent;
  */
 public class Protocol {
     private static InetAddress robotAddress = null;
+    private static int ROBOT_PORT = 6800;
     private DatagramSocket socket;
+    private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
+    private Thread sendThread;
 
     static {
         try {
             robotAddress = InetAddress.getByAddress(new byte[] {10, 0, 0, 30});
         } catch(UnknownHostException e) {
-            e.printStackTrace();
+            throw new ExceptionInInitializerError(e);
         }
     }
 
     public Protocol() {
         try {
+            socket = new DatagramSocket();
             socket.setReuseAddress(true);
         } catch(SocketException e) {
             e.printStackTrace();
         }
+        sendThread = new Thread(new SendWorker());
+        sendThread.start();
     }
 
     public void sendStick(int axis, float value) {
-        int controlId = 0;
+        int controlId;
         switch(axis) {
             case MotionEvent.AXIS_X:
                 controlId = ControlIDs.LTHUMBX;
@@ -63,7 +74,7 @@ public class Protocol {
     }
 
     public void sendButton(int keycode, boolean value) {
-        int controlId = 0;
+        int controlId;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
                 controlId = ControlIDs.A;
@@ -114,16 +125,16 @@ public class Protocol {
 
     public void sendDPad(int keycode) {
         // DPAD is 4 groups of 2 bits: +Y -Y +X -X
-        // Note, his will not send angled dpad positions
+        // Note, this will not send angled dpad positions
         int value = (b(keycode == KeyEvent.KEYCODE_DPAD_UP))
-                | (b(keycode == KeyEvent.KEYCODE_DPAD_DOWN) << 2)
+                | (b(keycode == KeyEvent.KEYCODE_DPAD_DOWN)  << 2)
                 | (b(keycode == KeyEvent.KEYCODE_DPAD_RIGHT) << 4)
-                | (b(keycode == KeyEvent.KEYCODE_DPAD_LEFT) << 6);
+                | (b(keycode == KeyEvent.KEYCODE_DPAD_LEFT)  << 6);
         sendData(ControlIDs.DPAD, value);
     }
 
     private void sendData(int controlId, int value) {
-        // TODO
+        sendQueue.offer(new ControlData(controlId, value));
     }
 
     private int b(boolean value) {
@@ -151,5 +162,44 @@ public class Protocol {
         public static final int DPAD = 17;
         public static final int L2 = 18;
         public static final int R2 = 19;
+    }
+
+    private static class ControlData {
+        public final int controlId;
+        public final int value;
+
+        public ControlData(int controlId, int value) {
+            this.controlId = controlId;
+            this.value = value;
+        }
+    }
+
+    private class SendWorker implements Runnable {
+        @Override
+        public void run() {
+            ControlData data;
+            while(!Thread.interrupted() && !socket.isClosed()) {
+                try {
+                    data = sendQueue.take();
+                } catch(InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+
+                ByteBuffer buffer = ByteBuffer.allocate(4);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.put((byte)data.controlId).put((byte) data.value);
+                byte[] dataBare = new byte[2];
+                buffer.get(dataBare, 0, 2);
+                short crc16 = (short)CRC16CCITT.crc16(dataBare);
+                buffer.putShort(crc16);
+                byte[] dataBytes = new byte[buffer.capacity()];
+                try {
+                    socket.send(new DatagramPacket(dataBytes, dataBytes.length, robotAddress, ROBOT_PORT));
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
