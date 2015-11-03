@@ -18,11 +18,11 @@ public class CRC16CCITT {
     public static final int POLY = 0x1021; // 0001 0000 0010 0001  (0, 5, 12)
     public static final int DEF_CRC = 0xFFFF;
 
-    public int crc16(byte[] bytes) {
+    public static int crc16(byte[] bytes) {
         return crc16(bytes, DEF_CRC);
     }
 
-    public int crc16(byte[] bytes, int crc) {
+    public static int crc16(byte[] bytes, int crc) {
         for (byte b : bytes) {
             for (int i = 0; i < 8; i++) {
                 boolean bit = ((b >> (7 - i) & 1) == 1);
