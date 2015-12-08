@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -17,27 +17,24 @@ import android.view.MotionEvent;
  * Implements the network protocol
  */
 public class Protocol {
-    private static InetAddress robotAddress = null;
-    private static int ROBOT_PORT = 6800;
+    private static final String TAG = "Astro-Proto-2015";
+    private static InetAddress ROBOT_ADDRESS = null;
+    private static final int ROBOT_PORT = 6800;
     private DatagramSocket socket;
     private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
     private Thread sendThread;
 
     static {
         try {
-            robotAddress = InetAddress.getByAddress(new byte[] {10, 0, 0, 30});
+            ROBOT_ADDRESS = InetAddress.getByAddress(new byte[] {10, 0, 0, 30});
         } catch(UnknownHostException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    public Protocol() {
-        try {
-            socket = new DatagramSocket();
-            socket.setReuseAddress(true);
-        } catch(SocketException e) {
-            e.printStackTrace();
-        }
+    public Protocol() throws IOException {
+        socket = new DatagramSocket();
+        socket.setReuseAddress(true);
         sendThread = new Thread(new SendWorker());
         sendThread.start();
     }
@@ -73,7 +70,7 @@ public class Protocol {
         sendData(controlId, data);
     }
 
-    public void sendButton(int keycode, boolean value) {
+    public void sendButton(int keycode, boolean pressed) {
         int controlId;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
@@ -120,7 +117,7 @@ public class Protocol {
             default:
                 return;
         }
-        sendData(controlId, b(value));
+        sendData(controlId, b(pressed));
     }
 
     public void sendDPad(int keycode) {
@@ -134,6 +131,7 @@ public class Protocol {
     }
 
     private void sendData(int controlId, int value) {
+        Log.d(TAG, "controlId: " + controlId + ", value: " + value);
         sendQueue.offer(new ControlData(controlId, value));
     }
 
@@ -190,12 +188,13 @@ public class Protocol {
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 buffer.put((byte)data.controlId).put((byte) data.value);
                 byte[] dataBare = new byte[2];
+                buffer.rewind();
                 buffer.get(dataBare, 0, 2);
                 short crc16 = (short)CRC16CCITT.crc16(dataBare);
-                buffer.putShort(crc16);
+                buffer.putShort(2, crc16);
                 byte[] dataBytes = new byte[buffer.capacity()];
                 try {
-                    socket.send(new DatagramPacket(dataBytes, dataBytes.length, robotAddress, ROBOT_PORT));
+                    socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
                 } catch(IOException e) {
                     e.printStackTrace();
                 }

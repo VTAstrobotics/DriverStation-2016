@@ -1,5 +1,8 @@
 package org.astrobotics.ds2016;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -8,15 +11,33 @@ import android.hardware.input.InputManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
+
+import org.astrobotics.ds2016.io.Protocol;
 
 public class HUDActivity extends AppCompatActivity {
+    private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
+            MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_LTRIGGER,
+            MotionEvent.AXIS_RTRIGGER};
+    private HashMap<Integer, Float> prevJoyState = new HashMap<>();
+    private Protocol protocol;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_hud);
+
+        try {
+            protocol = new Protocol();
+        } catch(IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error initializing network protocol", Toast.LENGTH_LONG).show();
+            finish();
+        }
 
         // Initialize indicators
         initIndicator(R.id.robot_status, R.drawable.ic_robot_status);
@@ -42,6 +63,10 @@ public class HUDActivity extends AppCompatActivity {
             }
         }, null);
         updateGamepadStatus();
+
+        for(int axis : AXES) {
+            prevJoyState.put(axis, -10.0f);
+        }
     }
 
     @Override
@@ -61,6 +86,35 @@ public class HUDActivity extends AppCompatActivity {
             flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         }
         getWindow().getDecorView().setSystemUiVisibility(flags);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+            protocol.sendButton(keyCode, true);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+            protocol.sendButton(keyCode, false);
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
+            for(int axis : AXES) {
+                Log.d("astro-joy", "axis " + axis + ": " + event.getAxisValue(axis));
+            }
+            return true;
+        }
+        return super.onGenericMotionEvent(event);
     }
 
     // Sets indicator icon
