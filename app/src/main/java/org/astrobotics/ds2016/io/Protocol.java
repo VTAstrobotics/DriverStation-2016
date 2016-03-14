@@ -23,6 +23,7 @@ public class Protocol {
     private DatagramSocket socket;
     private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
     private Thread sendThread;
+    private ControlData controlData;
 
     static {
         try {
@@ -37,108 +38,109 @@ public class Protocol {
         socket.setReuseAddress(true);
         sendThread = new Thread(new SendWorker());
         sendThread.start();
+        this.controlData = new ControlData();
     }
 
     public void sendStick(int axis, float value) {
-        int controlId;
         switch(axis) {
             case MotionEvent.AXIS_X:
-                controlId = ControlIDs.LTHUMBX;
+                controlData.setAxis(ControlIDs.LTHUMBX, value);
                 break;
             case MotionEvent.AXIS_Y:
-                controlId = ControlIDs.LTHUMBY;
+                controlData.setAxis(ControlIDs.LTHUMBY, value);
                 break;
             case MotionEvent.AXIS_Z:
-                controlId = ControlIDs.RTHUMBX;
+                controlData.setAxis(ControlIDs.RTHUMBX, value);
                 break;
             case MotionEvent.AXIS_RZ:
-                controlId = ControlIDs.RTHUMBY;
+                controlData.setAxis(ControlIDs.RTHUMBY, value);
                 break;
             case MotionEvent.AXIS_LTRIGGER:
-                controlId = ControlIDs.LTRIGGER;
+                controlData.setAxis(ControlIDs.LTRIGGER, value);
                 break;
             case MotionEvent.AXIS_RTRIGGER:
-                controlId = ControlIDs.RTRIGGER;
+                controlData.setAxis(ControlIDs.RTRIGGER, value);
                 break;
             default:
                 return;
         }
-        // NOTE: The triggers have range [0, 100] instead of [-100, 100]
-        // So the final value that is sent will have range [90, 180] instead of [0, 180]
-        // TODO actually verify this
-        int data = (int) Math.max(0, Math.min(180, (value + 1) * 90));
-        sendData(controlId, data);
+
+        sendData();
     }
 
-    public void sendButton(int keycode, boolean pressed) {
-        int controlId;
+    // for pressing buttons
+    public void setButton(int keycode, boolean pressed) {
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
-                controlId = ControlIDs.A;
+                controlData.setButton(ControlIDs.A, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_B:
-                controlId = ControlIDs.B;
+                controlData.setButton(ControlIDs.B, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_X:
-                controlId = ControlIDs.X;
+                controlData.setButton(ControlIDs.X, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_Y:
-                controlId = ControlIDs.Y;
+                controlData.setButton(ControlIDs.Y, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_L1:
-                controlId = ControlIDs.LB;
+                controlData.setButton(ControlIDs.LB, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_R1:
-                controlId = ControlIDs.RB;
+                controlData.setButton(ControlIDs.RB, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_SELECT:
                 // TODO verify Back button maps to Select
-                controlId = ControlIDs.BACK;
+                controlData.setButton(ControlIDs.BACK, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_START:
-                controlId = ControlIDs.START;
+                controlData.setButton(ControlIDs.START, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_MODE:
                 // TODO verify Xbox button maps to Mode
-                controlId = ControlIDs.XBOX;
+                controlData.setButton(ControlIDs.XBOX, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBL:
-                controlId = ControlIDs.LTHUMBBTN;
+                controlData.setButton(ControlIDs.LTHUMBBTN, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBR:
-                controlId = ControlIDs.RTHUMBBTN;
+                controlData.setButton(ControlIDs.RTHUMBBTN, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_L2:
-                controlId = ControlIDs.L2;
+                controlData.setButton(ControlIDs.L2, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_R2:
-                controlId = ControlIDs.R2;
+                controlData.setButton(ControlIDs.R2, pressed);
+                break;
+            case KeyEvent.KEYCODE_DPAD_UP:
+                controlData.setButton(ControlIDs.DPAD_UP, pressed);
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                controlData.setButton(ControlIDs.DPAD_DOWN, pressed);
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                controlData.setButton(ControlIDs.DPAD_LEFT, pressed);
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                controlData.setButton(ControlIDs.DPAD_RIGHT, pressed);
                 break;
             default:
                 return;
         }
-        sendData(controlId, b(pressed));
+        // send the data on update
+        sendData();
     }
 
-    public void sendDPad(int keycode) {
-        // DPAD is 4 groups of 2 bits: +Y -Y +X -X
-        // Note, this will not send angled dpad positions
-        int value = (b(keycode == KeyEvent.KEYCODE_DPAD_UP))
-                | (b(keycode == KeyEvent.KEYCODE_DPAD_DOWN)  << 2)
-                | (b(keycode == KeyEvent.KEYCODE_DPAD_RIGHT) << 4)
-                | (b(keycode == KeyEvent.KEYCODE_DPAD_LEFT)  << 6);
-        sendData(ControlIDs.DPAD, value);
-    }
-
-    private void sendData(int controlId, int value) {
-        Log.d(TAG, "controlId: " + controlId + ", value: " + value);
-        sendQueue.offer(new ControlData(controlId, value));
+    private void sendData() {
+        Log.d(TAG, "Adding Data to send queue");
+        sendQueue.offer(new ControlData(controlData));
     }
 
     private int b(boolean value) {
         return (value ? 1 : 0);
     }
 
+    // ***NOTE*** change size if IDs are changed
     private static class ControlIDs {
         public static final int LTHUMBX = 0;
         public static final int LTHUMBY = 1;
@@ -157,26 +159,154 @@ public class Protocol {
         public static final int XBOX = 14;
         public static final int LTHUMBBTN = 15;
         public static final int RTHUMBBTN = 16;
-        public static final int DPAD = 17;
-        public static final int L2 = 18;
-        public static final int R2 = 19;
+        public static final int L2 = 17;
+        public static final int R2 = 18;
+        public static final int DPAD_UP = 19;
+        public static final int DPAD_DOWN = 20;
+        public static final int DPAD_LEFT = 21;
+        public static final int DPAD_RIGHT = 22;
+        public static final int SIZE = 23;
     }
 
     private static class ControlData {
-        public final int controlId;
-        public final int value;
+        // array for data, everything can be stored in byte,
+        // though for buttons, only one bit will be used
+        public static byte data[];
+        // for if the axis doesn't return to exactly 0 used + or -
+        private static final int AXIS_BOUNDS = 3;
+        // max/min axis values can be
+        private static final double AXIS_MAX = 256.0;
+        // max value byte should be
+        private static final int AXIS_BYTE_MAX = 100;
 
-        public ControlData(int controlId, int value) {
-            this.controlId = controlId;
-            this.value = value;
+
+        // default constructor
+        public ControlData() {
+            this.data = new byte[ControlIDs.SIZE];
+        }
+
+        // copy constructor
+        public ControlData(ControlData oldData){
+            this.data = new byte[oldData.data.length];
+            // deep copy old data
+            for (int i = 0; i < oldData.data.length; i++){
+                this.data[i] = oldData.data[i];
+            }
+        }
+
+        // sets button to on/off
+        // assumes they gave an ID of a button
+        public static void setButton(int ID, boolean down){
+            if (down){
+                data[ID] = 0x01;
+            } else {
+                data[ID] = 0x00;
+            }
+        }
+
+        // ************************************************
+        // NEEDS TO BE CHANGED FOR WHATEVER AXIS ACTUALLY GIVES
+        // assumes the id is for an axis
+        public static void setAxis(int ID, double value){
+            if (value > AXIS_BOUNDS){
+                // truncate and make for 0 to 100
+                int tVal = (int) (AXIS_BYTE_MAX * (value / AXIS_MAX));
+                if (tVal > AXIS_BYTE_MAX){
+                    data[ID] = AXIS_BYTE_MAX;
+                } else {
+                    data[ID] = ((byte) tVal);
+                }
+            }
+            else if (value < -AXIS_BOUNDS){
+                int tVal = (int) (AXIS_BYTE_MAX * (value / -AXIS_MAX));
+                if (tVal > AXIS_BYTE_MAX){
+                    data[ID] = -AXIS_BYTE_MAX;
+                } else {
+                    data[ID] = ((byte) -tVal);
+                }
+            }
+            else {
+                data[ID] = 0x00;
+            }
+        }
+
+        // create the binary string with crc at the end
+        public byte[] toBits(){
+            byte[] bits = new byte[11];
+
+            // do stuff to array
+            // 6 bytes for axes
+            bits[10] = data[ControlIDs.LTHUMBX];
+            bits[9] = data[ControlIDs.LTHUMBY];
+            bits[8] = data[ControlIDs.RTHUMBX];
+            bits[7] = data[ControlIDs.RTHUMBY];
+            bits[6] = data[ControlIDs.LTRIGGER];
+            bits[5] = data[ControlIDs.RTRIGGER];
+
+            // 2 bytes for buttons
+            byte buttons1 = 0, buttons2 = 0;
+            buttons2 += data[ControlIDs.LTHUMBBTN];
+            buttons2 = (byte) (buttons2 << 1);
+            buttons2 += data[ControlIDs.RTHUMBBTN];
+            bits[4] = buttons2;
+            buttons1 += data[ControlIDs.START];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.BACK];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.LB];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.RB];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.Y];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.X];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.B];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.A];
+            bits[3] = buttons1;
+
+            // 1 byte for dpad
+            byte dpad = 0;
+            dpad += data[ControlIDs.DPAD_UP];
+            dpad = (byte) (dpad << 2);
+            dpad += data[ControlIDs.DPAD_DOWN];
+            dpad = (byte) (dpad << 2);
+            dpad += data[ControlIDs.DPAD_LEFT];
+            dpad = (byte) (dpad << 2);
+            dpad += data[ControlIDs.DPAD_RIGHT];
+            bits[2] = dpad;
+
+            // the 2 bit crc
+            byte[] dataBare = new byte[9];
+            for (int i = 0; i < dataBare.length; i++){
+                dataBare[i] = bits[i+2];
+            }
+            short crc16 = (short)CRC16CCITT.crc16(dataBare);
+            data[0] = (byte)(crc16 & 0xff);
+            data[1] = (byte)((crc16 >> 8) & 0xff);
+
+            return bits;
+        }
+
+        // return a printable string, for debugging
+        public String toString(){
+            String str = "";
+            for (int i = 0; i < data.length; i++){
+                str = str +"\n" +i +": " +data[i];
+            }
+            return str;
         }
     }
 
+    // send the data from the queue in a thread
     private class SendWorker implements Runnable {
         @Override
         public void run() {
             ControlData data;
+            // while the thread can send
             while(!Thread.interrupted() && !socket.isClosed()) {
+                // keep running if something is taken from stack
                 try {
                     data = sendQueue.take();
                 } catch(InterruptedException e) {
@@ -184,15 +314,8 @@ public class Protocol {
                     break;
                 }
 
-                ByteBuffer buffer = ByteBuffer.allocate(4);
-                buffer.order(ByteOrder.LITTLE_ENDIAN);
-                buffer.put((byte)data.controlId).put((byte) data.value);
-                byte[] dataBare = new byte[2];
-                buffer.rewind();
-                buffer.get(dataBare, 0, 2);
-                short crc16 = (short)CRC16CCITT.crc16(dataBare);
-                buffer.putShort(2, crc16);
-                byte[] dataBytes = new byte[buffer.capacity()];
+                Log.d(TAG, "Sending Data");
+                byte[] dataBytes = controlData.toBits();
                 try {
                     socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
                 } catch(IOException e) {
