@@ -5,8 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
@@ -41,7 +40,8 @@ public class Protocol {
         this.controlData = new ControlData();
     }
 
-    public void sendStick(int axis, float value) {
+    public void setStick(int axis, float value) {
+        Log.d("astro-joy", "axis " + axis + ": " + value);
         switch(axis) {
             case MotionEvent.AXIS_X:
                 controlData.setAxis(ControlIDs.LTHUMBX, value);
@@ -69,7 +69,8 @@ public class Protocol {
     }
 
     // for pressing buttons
-    public void setButton(int keycode, boolean pressed) {
+    public void sendButton(int keycode, boolean pressed) {
+        Log.d("astro-joy", "button " + keycode + ": " + pressed);
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
                 controlData.setButton(ControlIDs.A, pressed);
@@ -89,7 +90,7 @@ public class Protocol {
             case KeyEvent.KEYCODE_BUTTON_R1:
                 controlData.setButton(ControlIDs.RB, pressed);
                 break;
-            case KeyEvent.KEYCODE_BUTTON_SELECT:
+            case KeyEvent.KEYCODE_BACK:
                 // TODO verify Back button maps to Select
                 controlData.setButton(ControlIDs.BACK, pressed);
                 break;
@@ -132,7 +133,7 @@ public class Protocol {
     }
 
     private void sendData() {
-        Log.d(TAG, "Adding Data to send queue");
+//        Log.d(TAG, "Adding Data to send queue");
         sendQueue.offer(new ControlData(controlData));
     }
 
@@ -171,13 +172,13 @@ public class Protocol {
     private static class ControlData {
         // array for data, everything can be stored in byte,
         // though for buttons, only one bit will be used
-        public static byte data[];
+        public byte data[];
         // for if the axis doesn't return to exactly 0 used + or -
-        private static final int AXIS_BOUNDS = 3;
+        private final int AXIS_BOUNDS = 3;
         // max/min axis values can be
-        private static final double AXIS_MAX = 256.0;
+        private final double AXIS_MAX = 256.0;
         // max value byte should be
-        private static final int AXIS_BYTE_MAX = 100;
+        private final int AXIS_BYTE_MAX = 100;
 
 
         // default constructor
@@ -196,18 +197,19 @@ public class Protocol {
 
         // sets button to on/off
         // assumes they gave an ID of a button
-        public static void setButton(int ID, boolean down){
+        public void setButton(int ID, boolean down){
             if (down){
                 data[ID] = 0x01;
             } else {
                 data[ID] = 0x00;
             }
+            System.out.println(Arrays.toString(data));
         }
 
         // ************************************************
         // NEEDS TO BE CHANGED FOR WHATEVER AXIS ACTUALLY GIVES
         // assumes the id is for an axis
-        public static void setAxis(int ID, double value){
+        public void setAxis(int ID, double value){
             if (value > AXIS_BOUNDS){
                 // truncate and make for 0 to 100
                 int tVal = (int) (AXIS_BYTE_MAX * (value / AXIS_MAX));
@@ -228,6 +230,7 @@ public class Protocol {
             else {
                 data[ID] = 0x00;
             }
+            System.out.println(Arrays.toString(data));
         }
 
         // create the binary string with crc at the end
@@ -283,8 +286,8 @@ public class Protocol {
                 dataBare[i] = bits[i+2];
             }
             short crc16 = (short)CRC16CCITT.crc16(dataBare);
-            data[0] = (byte)(crc16 & 0xff);
-            data[1] = (byte)((crc16 >> 8) & 0xff);
+            bits[0] = (byte)(crc16 & 0xff);
+            bits[1] = (byte)((crc16 >> 8) & 0xff);
 
             return bits;
         }
@@ -313,7 +316,7 @@ public class Protocol {
                     Thread.currentThread().interrupt();
                     break;
                 }
-                Log.d(TAG, "Sending Data");
+//                Log.d(TAG, "Sending Data");
                 byte[] dataBytes = controlData.toBits();
                 try {
                     socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));

@@ -36,9 +36,8 @@ public class HUDActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_hud);
+        setContentView(R.layout.activity_hud);
 
-        /*
         try {
             protocol = new Protocol();
         } catch(IOException e) {
@@ -72,22 +71,15 @@ public class HUDActivity extends AppCompatActivity {
         }, null);
         updateGamepadStatus();
 
-        for(int axis : AXES) {
-            prevJoyState.put(axis, -10.0f);
-        }
-        */
-
         // SKYLARS STUFF
         //
-        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+/*        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
 
         mjpegView = new MjpegView(this);
         mjpegView.setSource(MjpegInputStream.read(URL));
         mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
         mjpegView.showFps(true);
-        setContentView(mjpegView);
-
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        setContentView(mjpegView);*/
     }
 
     @Override
@@ -131,7 +123,7 @@ public class HUDActivity extends AppCompatActivity {
     public boolean onGenericMotionEvent(MotionEvent event) {
         if((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
             for(int axis : AXES) {
-                Log.d("astro-joy", "axis " + axis + ": " + event.getAxisValue(axis));
+                protocol.setStick(axis, event.getAxisValue(axis));
             }
             return true;
         }
