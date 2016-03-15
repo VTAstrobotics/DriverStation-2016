@@ -16,8 +16,12 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
+import org.astrobotics.ds2016.io.MjpegInputStream;
+import org.astrobotics.ds2016.io.MjpegView;
 import org.astrobotics.ds2016.io.Protocol;
 
 public class HUDActivity extends AppCompatActivity {
@@ -26,11 +30,15 @@ public class HUDActivity extends AppCompatActivity {
             MotionEvent.AXIS_RTRIGGER};
     private HashMap<Integer, Float> prevJoyState = new HashMap<>();
     private Protocol protocol;
+    private MjpegView mjpegView;
+    private static final int MENU_QUIT = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_hud);
+        //setContentView(R.layout.activity_hud);
 
+        /*
         try {
             protocol = new Protocol();
         } catch(IOException e) {
@@ -67,6 +75,19 @@ public class HUDActivity extends AppCompatActivity {
         for(int axis : AXES) {
             prevJoyState.put(axis, -10.0f);
         }
+        */
+
+        // SKYLARS STUFF
+        //
+        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+
+        mjpegView = new MjpegView(this);
+        mjpegView.setSource(MjpegInputStream.read(URL));
+        mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
+        mjpegView.showFps(true);
+        setContentView(mjpegView);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
     }
 
     @Override
