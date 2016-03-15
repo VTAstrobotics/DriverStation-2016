@@ -193,6 +193,7 @@ public class Protocol {
                 short crc16 = (short)CRC16CCITT.crc16(dataBare);
                 buffer.putShort(2, crc16);
                 byte[] dataBytes = new byte[buffer.capacity()];
+                buffer.get(dataBytes, 0, 4)
                 try {
                     socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
                 } catch(IOException e) {
