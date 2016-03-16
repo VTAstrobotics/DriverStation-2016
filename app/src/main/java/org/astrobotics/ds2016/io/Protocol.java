@@ -16,7 +16,7 @@ import android.view.MotionEvent;
  * Implements the network protocol
  */
 public class Protocol {
-    private static final String TAG = "Astro-Proto-2015";
+    private static final String TAG = "Astro-Proto-2016";
     private static InetAddress ROBOT_ADDRESS = null;
     private static final int ROBOT_PORT = 6800;
     private DatagramSocket socket;
@@ -60,6 +60,18 @@ public class Protocol {
                 break;
             case MotionEvent.AXIS_RTRIGGER:
                 controlData.setAxis(ControlIDs.RTRIGGER, value);
+                break;
+            case MotionEvent.AXIS_HAT_X:
+                controlData.setDpad(MotionEvent.AXIS_HAT_X, value);
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                controlData.setDpad(MotionEvent.AXIS_HAT_Y, value);
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                controlData.setDpad(MotionEvent.AXIS_HAT_X, value);
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                controlData.setDpad(ControlIDs.DPAD_RIGHT, value);
                 break;
             default:
                 return;
@@ -113,18 +125,6 @@ public class Protocol {
             case KeyEvent.KEYCODE_BUTTON_R2:
                 controlData.setButton(ControlIDs.R2, pressed);
                 break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-                controlData.setButton(ControlIDs.DPAD_UP, pressed);
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                controlData.setButton(ControlIDs.DPAD_DOWN, pressed);
-                break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                controlData.setButton(ControlIDs.DPAD_LEFT, pressed);
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                controlData.setButton(ControlIDs.DPAD_RIGHT, pressed);
-                break;
             default:
                 return;
         }
@@ -135,10 +135,6 @@ public class Protocol {
     private void sendData() {
 //        Log.d(TAG, "Adding Data to send queue");
         sendQueue.offer(new ControlData(controlData));
-    }
-
-    private int b(boolean value) {
-        return (value ? 1 : 0);
     }
 
     // ***NOTE*** change size if IDs are changed
@@ -174,11 +170,13 @@ public class Protocol {
         // though for buttons, only one bit will be used
         public byte data[];
         // for if the axis doesn't return to exactly 0 used + or -
-        private final int AXIS_BOUNDS = 3;
+        private final double AXIS_BOUNDS = 0.1;
         // max/min axis values can be
-        private final double AXIS_MAX = 256.0;
+        private final double AXIS_MAX = 1.0;
         // max value byte should be
         private final int AXIS_BYTE_MAX = 100;
+
+        private final double DPAD_BOUNDS = 0.1;
 
 
         // default constructor
@@ -231,6 +229,15 @@ public class Protocol {
                 data[ID] = 0x00;
             }
             System.out.println(Arrays.toString(data));
+        }
+
+        // dpad comes as a float, but should be set to on or off
+        public void setDpad(int ID, float value){
+            if (value > DPAD_BOUNDS || value < -DPAD_BOUNDS){
+                data[ID] = 0x01;
+            } else {
+                data[ID] = 0x00;
+            }
         }
 
         // create the binary string with crc at the end
