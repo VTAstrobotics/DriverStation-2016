@@ -338,7 +338,7 @@ public class Protocol {
                     break;
                 }
 //                Log.d(TAG, "Sending Data");
-                byte[] dataBytes = controlData.toBits();
+                byte[] dataBytes = data.toBits();
                 try {
                     socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
                 } catch(IOException e) {
