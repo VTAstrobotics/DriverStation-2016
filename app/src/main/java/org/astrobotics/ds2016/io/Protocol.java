@@ -61,17 +61,11 @@ public class Protocol {
             case MotionEvent.AXIS_RTRIGGER:
                 controlData.setAxis(ControlIDs.RTRIGGER, value);
                 break;
-            case MotionEvent.AXIS_HAT_X:
-                controlData.setDpad(MotionEvent.AXIS_HAT_X, value);
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case MotionEvent.AXIS_HAT_Y:
                 controlData.setDpad(MotionEvent.AXIS_HAT_Y, value);
                 break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case MotionEvent.AXIS_HAT_X:
                 controlData.setDpad(MotionEvent.AXIS_HAT_X, value);
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                controlData.setDpad(ControlIDs.DPAD_RIGHT, value);
                 break;
             default:
                 return;
@@ -83,53 +77,56 @@ public class Protocol {
     // for pressing buttons
     public void sendButton(int keycode, boolean pressed) {
         Log.d("astro-joy", "button " + keycode + ": " + pressed);
+        boolean wasChanged;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
-                controlData.setButton(ControlIDs.A, pressed);
+                wasChanged = controlData.setButton(ControlIDs.A, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_B:
-                controlData.setButton(ControlIDs.B, pressed);
+                wasChanged = controlData.setButton(ControlIDs.B, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_X:
-                controlData.setButton(ControlIDs.X, pressed);
+                wasChanged = controlData.setButton(ControlIDs.X, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_Y:
-                controlData.setButton(ControlIDs.Y, pressed);
+                wasChanged = controlData.setButton(ControlIDs.Y, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_L1:
-                controlData.setButton(ControlIDs.LB, pressed);
+                wasChanged = controlData.setButton(ControlIDs.LB, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_R1:
-                controlData.setButton(ControlIDs.RB, pressed);
+                wasChanged = controlData.setButton(ControlIDs.RB, pressed);
                 break;
             case KeyEvent.KEYCODE_BACK:
                 // TODO verify Back button maps to Select
-                controlData.setButton(ControlIDs.BACK, pressed);
+                wasChanged = controlData.setButton(ControlIDs.BACK, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_START:
-                controlData.setButton(ControlIDs.START, pressed);
+                wasChanged = controlData.setButton(ControlIDs.START, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_MODE:
                 // TODO verify Xbox button maps to Mode
-                controlData.setButton(ControlIDs.XBOX, pressed);
+                wasChanged = controlData.setButton(ControlIDs.XBOX, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBL:
-                controlData.setButton(ControlIDs.LTHUMBBTN, pressed);
+                wasChanged = controlData.setButton(ControlIDs.LTHUMBBTN, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBR:
-                controlData.setButton(ControlIDs.RTHUMBBTN, pressed);
+                wasChanged = controlData.setButton(ControlIDs.RTHUMBBTN, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_L2:
-                controlData.setButton(ControlIDs.L2, pressed);
+                wasChanged = controlData.setButton(ControlIDs.L2, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_R2:
-                controlData.setButton(ControlIDs.R2, pressed);
+                wasChanged = controlData.setButton(ControlIDs.R2, pressed);
                 break;
             default:
                 return;
         }
-        // send the data on update
-        sendData();
+        // send the data on change
+        if (wasChanged) {
+            sendData();
+        }
     }
 
     private void sendData() {
@@ -175,7 +172,7 @@ public class Protocol {
         private final double AXIS_MAX = 1.0;
         // max value byte should be
         private final int AXIS_BYTE_MAX = 100;
-
+        // for the dead zone in the dpad
         private final double DPAD_BOUNDS = 0.1;
 
 
@@ -195,18 +192,20 @@ public class Protocol {
 
         // sets button to on/off
         // assumes they gave an ID of a button
-        public void setButton(int ID, boolean down){
+        // returns true if button was changed, false if not
+        public boolean setButton(int ID, boolean down){
+            byte oldval = data[ID];
             if (down){
                 data[ID] = 0x01;
             } else {
                 data[ID] = 0x00;
             }
             System.out.println(Arrays.toString(data));
+            return oldval == data[ID];
         }
 
-        // ************************************************
-        // NEEDS TO BE CHANGED FOR WHATEVER AXIS ACTUALLY GIVES
         // assumes the id is for an axis
+        // takes value from -1 to 1 and converts to specified range
         public void setAxis(int ID, double value){
             if (value > AXIS_BOUNDS){
                 // truncate and make for 0 to 100
@@ -232,11 +231,26 @@ public class Protocol {
         }
 
         // dpad comes as a float, but should be set to on or off
-        public void setDpad(int ID, float value){
-            if (value > DPAD_BOUNDS || value < -DPAD_BOUNDS){
-                data[ID] = 0x01;
-            } else {
-                data[ID] = 0x00;
+        public void setDpad(int eventCode, float value){
+            if (eventCode == MotionEvent.AXIS_HAT_X) {
+                if (value > DPAD_BOUNDS) {
+                    data[ControlIDs.DPAD_RIGHT] = 0x01;
+                } else if (value < -DPAD_BOUNDS){
+                    data[ControlIDs.DPAD_LEFT] = 0x01;
+                } else {
+                    data[ControlIDs.DPAD_LEFT] = 0x00;
+                    data[ControlIDs.DPAD_RIGHT] = 0x00;
+                }
+            }
+            else if (eventCode == MotionEvent.AXIS_HAT_Y) {
+                if (value > DPAD_BOUNDS) {
+                    data[ControlIDs.DPAD_DOWN] = 0x01;
+                } else if (value < -DPAD_BOUNDS){
+                    data[ControlIDs.DPAD_UP] = 0x01;
+                } else {
+                    data[ControlIDs.DPAD_UP] = 0x00;
+                    data[ControlIDs.DPAD_DOWN] = 0x00;
+                }
             }
         }
 
