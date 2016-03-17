@@ -27,7 +27,7 @@ import org.astrobotics.ds2016.io.Protocol;
 public class HUDActivity extends AppCompatActivity {
     private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_LTRIGGER,
-            MotionEvent.AXIS_RTRIGGER};
+            MotionEvent.AXIS_RTRIGGER, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
     private HashMap<Integer, Float> prevJoyState = new HashMap<>();
     private Protocol protocol;
     private MjpegView mjpegView;
