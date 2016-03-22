@@ -324,7 +324,7 @@ public class Protocol {
         }
     }
 
-    private class pingWorker implements Runnable {
+    private class PingWorker implements Runnable {
         @Override
         public void run() {
             // variables
@@ -336,6 +336,12 @@ public class Protocol {
                     //ping
                     //reset time
                     lastTime = System.currentTimeMillis();
+                    // sleep for majority of the frequency
+                    try {
+                        Thread.sleep((long) (pingFrequency * .95));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
