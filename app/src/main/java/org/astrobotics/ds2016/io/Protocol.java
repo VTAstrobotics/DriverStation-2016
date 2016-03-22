@@ -41,7 +41,7 @@ public class Protocol {
     }
 
     public void setStick(int axis, float value) {
-        Log.d("astro-joy", "axis " + axis + ": " + value);
+        Log.d(TAG, "axis " + axis + ": " + value);
         switch(axis) {
             case MotionEvent.AXIS_X:
                 controlData.setAxis(ControlIDs.LTHUMBX, value);
@@ -55,10 +55,10 @@ public class Protocol {
             case MotionEvent.AXIS_RZ:
                 controlData.setAxis(ControlIDs.RTHUMBY, value);
                 break;
-            case MotionEvent.AXIS_LTRIGGER:
+            case MotionEvent.AXIS_BRAKE:
                 controlData.setAxis(ControlIDs.LTRIGGER, value);
                 break;
-            case MotionEvent.AXIS_RTRIGGER:
+            case MotionEvent.AXIS_THROTTLE:
                 controlData.setAxis(ControlIDs.RTRIGGER, value);
                 break;
             case MotionEvent.AXIS_HAT_Y:
@@ -76,7 +76,7 @@ public class Protocol {
 
     // for pressing buttons
     public void sendButton(int keycode, boolean pressed) {
-        Log.d("astro-joy", "button " + keycode + ": " + pressed);
+        Log.d(TAG, "button " + keycode + ": " + pressed);
         boolean wasChanged;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
@@ -200,8 +200,7 @@ public class Protocol {
             } else {
                 data[ID] = 0x00;
             }
-            System.out.println(Arrays.toString(data));
-            return oldval == data[ID];
+            return oldval != data[ID];
         }
 
         // assumes the id is for an axis
@@ -227,7 +226,6 @@ public class Protocol {
             else {
                 data[ID] = 0x00;
             }
-            System.out.println(Arrays.toString(data));
         }
 
         // dpad comes as a float, but should be set to on or off
@@ -256,15 +254,17 @@ public class Protocol {
 
         // create the binary string with crc at the end
         public byte[] toBits(){
+            Log.d(TAG, "Data: " + Arrays.toString(data));
+
             byte[] bits = new byte[11];
 
             // do stuff to array
             // 6 bytes for axes
-            bits[10] = data[ControlIDs.LTHUMBX];
-            bits[9] = data[ControlIDs.LTHUMBY];
-            bits[8] = data[ControlIDs.RTHUMBX];
-            bits[7] = data[ControlIDs.RTHUMBY];
-            bits[6] = data[ControlIDs.LTRIGGER];
+            bits[0] = data[ControlIDs.LTHUMBX];
+            bits[1] = data[ControlIDs.LTHUMBY];
+            bits[2] = data[ControlIDs.RTHUMBX];
+            bits[3] = data[ControlIDs.RTHUMBY];
+            bits[4] = data[ControlIDs.LTRIGGER];
             bits[5] = data[ControlIDs.RTRIGGER];
 
             // 2 bytes for buttons
@@ -272,14 +272,14 @@ public class Protocol {
             buttons2 += data[ControlIDs.LTHUMBBTN];
             buttons2 = (byte) (buttons2 << 1);
             buttons2 += data[ControlIDs.RTHUMBBTN];
-            bits[4] = buttons2;
+            bits[7] = buttons2;
             buttons1 += data[ControlIDs.START];
             buttons1 = (byte) (buttons1 << 1);
             buttons1 += data[ControlIDs.BACK];
             buttons1 = (byte) (buttons1 << 1);
-            buttons1 += data[ControlIDs.LB];
-            buttons1 = (byte) (buttons1 << 1);
             buttons1 += data[ControlIDs.RB];
+            buttons1 = (byte) (buttons1 << 1);
+            buttons1 += data[ControlIDs.LB];
             buttons1 = (byte) (buttons1 << 1);
             buttons1 += data[ControlIDs.Y];
             buttons1 = (byte) (buttons1 << 1);
@@ -288,7 +288,8 @@ public class Protocol {
             buttons1 += data[ControlIDs.B];
             buttons1 = (byte) (buttons1 << 1);
             buttons1 += data[ControlIDs.A];
-            bits[3] = buttons1;
+            Log.d(TAG, "buttons: " + buttons1 +  " " + buttons2);
+            bits[6] = buttons1;
 
             // 1 byte for dpad
             byte dpad = 0;
@@ -299,16 +300,16 @@ public class Protocol {
             dpad += data[ControlIDs.DPAD_LEFT];
             dpad = (byte) (dpad << 2);
             dpad += data[ControlIDs.DPAD_RIGHT];
-            bits[2] = dpad;
+            bits[8] = dpad;
 
             // the 2 bit crc
             byte[] dataBare = new byte[9];
             for (int i = 0; i < dataBare.length; i++){
-                dataBare[i] = bits[i+2];
+                dataBare[i] = bits[i];
             }
             short crc16 = (short)CRC16CCITT.crc16(dataBare);
-            bits[0] = (byte)(crc16 & 0xff);
-            bits[1] = (byte)((crc16 >> 8) & 0xff);
+            bits[9] = (byte)(crc16 & 0xff);
+            bits[10] = (byte)((crc16 >> 8) & 0xff);
 
             return bits;
         }
