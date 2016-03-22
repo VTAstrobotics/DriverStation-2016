@@ -324,6 +324,23 @@ public class Protocol {
         }
     }
 
+    private class pingWorker implements Runnable {
+        @Override
+        public void run() {
+            // variables
+            double lastTime = System.currentTimeMillis();
+            double pingFrequency = 2D;
+            // while thread can send
+            while (!Thread.interrupted() && !socket.isClosed()){
+                if (System.currentTimeMillis() - lastTime > pingFrequency){
+                    //ping
+                    //reset time
+                    lastTime = System.currentTimeMillis();
+                }
+            }
+        }
+    }
+
     // send the data from the queue in a thread
     private class SendWorker implements Runnable {
         @Override
