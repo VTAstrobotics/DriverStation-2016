@@ -71,15 +71,13 @@ public class HUDActivity extends AppCompatActivity {
         }, null);
         updateGamepadStatus();
 
-        // SKYLARS STUFF
-        //
-/*        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
 
         mjpegView = new MjpegView(this);
         mjpegView.setSource(MjpegInputStream.read(URL));
         mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
         mjpegView.showFps(true);
-        setContentView(mjpegView);*/
+        setContentView(mjpegView);
     }
 
     @Override
