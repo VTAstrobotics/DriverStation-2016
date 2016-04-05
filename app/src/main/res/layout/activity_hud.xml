@@ -41,18 +41,23 @@
         android:layout_centerVertical="true"
         android:layout_margin="4dp">
         <RadioButton
+            android:id="@+id/cam_left"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="bottom"
+            android:layout_marginStart="0dp"
             android:layout_marginLeft="0dp"/>
         <RadioButton
+            android:id="@+id/cam_right"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"/>
         <RadioButton
+            android:id="@+id/cam_none"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="bottom"
+            android:layout_marginEnd="0dp"
             android:layout_marginRight="0dp"/>
     </RadioGroup>
 

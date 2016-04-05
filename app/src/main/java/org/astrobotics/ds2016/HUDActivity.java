@@ -16,8 +16,9 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import org.astrobotics.ds2016.io.MjpegInputStream;
@@ -31,12 +32,28 @@ public class HUDActivity extends AppCompatActivity {
     private HashMap<Integer, Float> prevJoyState = new HashMap<>();
     private Protocol protocol;
     private MjpegView mjpegView;
+    private RadioGroup streamButtons;
+    private RadioButton cam_left, cam_right, cam_none;
     private static final int MENU_QUIT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hud);
+
+        // set radio buttons
+        streamButtons = (RadioGroup) findViewById(R.id.stream_buttons);
+        streamButtons.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+            public void onCheckedChanged(RadioGroup group, int checkedId){
+                if (checkedId == R.id.cam_left){
+                    // TODO
+                } else if (checkedId == R.id.cam_right){
+                    // TODO
+                } else if (checkedId == R.id.cam_none){
+                    // TODo
+                }
+            }
+        });
 
         try {
             protocol = new Protocol();
