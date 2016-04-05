@@ -22,6 +22,16 @@
         android:layout_alignParentEnd="true"
         android:layout_margin="4dp"/>
 
+    <View
+        android:id="@+id/stream"
+        android:layout_marginTop="0px"
+        android:layout_marginBottom="0px"
+        android:layout_marginLeft="0px"
+        android:layout_marginRight="0px"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
