@@ -71,6 +71,15 @@ public class HUDActivity extends AppCompatActivity {
         }, null);
         updateGamepadStatus();
 
+        // how to set up GUI
+        // take existing activity
+        // Add the mjpeg view into activity.xml
+        // 3 indicators for left camera, right camera, and no camera
+        // start off disabled
+        // when one button is pushed, release other two, handle view appropriately
+        // maybe seperate into two layers
+        // 1 for stream
+        // 1 for other stuff
         String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
 
         mjpegView = new MjpegView(this);
