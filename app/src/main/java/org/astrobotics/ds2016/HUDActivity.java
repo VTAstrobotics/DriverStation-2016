@@ -47,13 +47,21 @@ public class HUDActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId){
                 if (checkedId == R.id.cam_left){
                     // TODO
+                    // close right stream (if open)
                 } else if (checkedId == R.id.cam_right){
                     // TODO
+                    // close left stream (if open)
                 } else if (checkedId == R.id.cam_none){
-                    // TODo
+                    // TODO
+                    // close both streams (if open)
+                    // don't waste data
                 }
             }
         });
+
+        cam_left = (RadioButton) findViewById(R.id.cam_left);
+        cam_right = (RadioButton) findViewById(R.id.cam_right);
+        cam_none = (RadioButton) findViewById(R.id.cam_none);
 
         try {
             protocol = new Protocol();
