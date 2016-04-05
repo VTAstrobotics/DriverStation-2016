@@ -86,7 +86,8 @@ public class HUDActivity extends AppCompatActivity {
         mjpegView.setSource(MjpegInputStream.read(URL));
         mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
         mjpegView.showFps(true);
-        setContentView(mjpegView);
+//        setContentView(findViewById(R.id.stream), mjpegView);
+//        setContentView(mjpegView);
     }
 
     @Override
