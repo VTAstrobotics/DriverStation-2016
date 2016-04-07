@@ -31,18 +31,19 @@ public class MjpegInputStream extends DataInputStream {
     private int mContentLength = -1;
 
     public static MjpegInputStream read(String url){
+        MjpegInputStream stream = null;
         try {
             URL urll = new URL(url);
             try {
                 HttpURLConnection htuc = (HttpURLConnection) urll.openConnection();
-                return new MjpegInputStream(htuc.getInputStream());
+                stream = new MjpegInputStream(htuc.getInputStream());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } catch (MalformedURLException e){
             e.printStackTrace();
         }
-        return null;
+        return stream;
 /*
         HttpResponse res;
         DefaultHttpClient httpclient = new DefaultHttpClient();

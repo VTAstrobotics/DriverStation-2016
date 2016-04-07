@@ -48,13 +48,17 @@ public class HUDActivity extends AppCompatActivity {
                 if (checkedId == R.id.cam_left){
                     // TODO
                     // close right stream (if open)
+                    Log.d("HUDActivity", "cam_left selected");
+
                 } else if (checkedId == R.id.cam_right){
                     // TODO
                     // close left stream (if open)
+                    Log.d("HUDActivity", "cam_right selected");
                 } else if (checkedId == R.id.cam_none){
                     // TODO
                     // close both streams (if open)
                     // don't waste data
+                    Log.d("HUDActivity", "cam_none selected");
                 }
             }
         });
@@ -108,10 +112,15 @@ public class HUDActivity extends AppCompatActivity {
         String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
 
         mjpegView = new MjpegView(this);
-        mjpegView.setSource(MjpegInputStream.read(URL));
-        mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
-        mjpegView.showFps(true);
-//        setContentView(findViewById(R.id.stream), mjpegView);
+        try {
+            mjpegView.setSource(MjpegInputStream.read(URL));
+            mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
+            mjpegView.showFps(true);
+            // THIS PROBABLY WON'T WORK!
+            setContentView(findViewById(R.id.stream), mjpegView.getLayoutParams());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 //        setContentView(mjpegView);
     }
 
