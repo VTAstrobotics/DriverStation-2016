@@ -34,30 +34,26 @@
         />
 
     <RadioGroup
-        android:layout_width="120dp"
-        android:layout_height="40dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/stream_buttons"
         android:layout_centerInParent="true"
-        android:layout_alignParentBottom="true">
+        android:orientation="horizontal">
         <RadioButton
             android:id="@+id/cam_left"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="bottom"
-            android:layout_marginEnd="0dp"
-            android:layout_marginRight="40dp"/>
-        <RadioButton
-            android:id="@+id/cam_right"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_vertical"/>
+            android:layout_gravity="bottom"/>
         <RadioButton
             android:id="@+id/cam_none"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="bottom"
-            android:layout_marginEnd="0dp"
-            android:layout_marginRight="0dp"/>
+            android:layout_gravity="bottom"/>
+        <RadioButton
+            android:id="@+id/cam_right"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"/>
     </RadioGroup>
 
     <LinearLayout

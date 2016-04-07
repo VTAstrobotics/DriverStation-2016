@@ -49,6 +49,12 @@ public class HUDActivity extends AppCompatActivity {
                     // TODO
                     // close right stream (if open)
                     Log.d("HUDActivity", "cam_left selected");
+                    Log.d("HUDActivity", "x for cam left: " +findViewById(R.id.cam_left).getX());
+                    Log.d("HUDActivity", "y for cam left: " + findViewById(R.id.cam_left).getY());
+                    Log.d("HUDActivity", "x for cam right: " +findViewById(R.id.cam_right).getX());
+                    Log.d("HUDActivity", "y for cam right: " +findViewById(R.id.cam_right).getY());
+                    Log.d("HUDActivity", "x for cam none: " +findViewById(R.id.cam_none).getX());
+                    Log.d("HUDActivity", "y for cam none: " +findViewById(R.id.cam_none).getY());
 
                 } else if (checkedId == R.id.cam_right){
                     // TODO
