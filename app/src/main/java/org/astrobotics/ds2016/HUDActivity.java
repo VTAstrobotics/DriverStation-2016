@@ -17,10 +17,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RadioGroup.OnCheckedChangeListener;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
-
 import org.astrobotics.ds2016.io.MjpegInputStream;
 import org.astrobotics.ds2016.io.MjpegView;
 import org.astrobotics.ds2016.io.Protocol;
@@ -33,7 +31,8 @@ public class HUDActivity extends AppCompatActivity {
     private Protocol protocol;
     private MjpegView mjpegView;
     private RadioGroup streamButtons;
-    private RadioButton cam_left, cam_right, cam_none;
+    private final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+    private final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
     private static final int MENU_QUIT = 1;
 
     @Override
@@ -46,32 +45,19 @@ public class HUDActivity extends AppCompatActivity {
         streamButtons.setOnCheckedChangeListener(new OnCheckedChangeListener(){
             public void onCheckedChanged(RadioGroup group, int checkedId){
                 if (checkedId == R.id.cam_left){
-                    // TODO
-                    // close right stream (if open)
                     Log.d("HUDActivity", "cam_left selected");
-                    Log.d("HUDActivity", "x for cam left: " +findViewById(R.id.cam_left).getX());
-                    Log.d("HUDActivity", "y for cam left: " + findViewById(R.id.cam_left).getY());
-                    Log.d("HUDActivity", "x for cam right: " +findViewById(R.id.cam_right).getX());
-                    Log.d("HUDActivity", "y for cam right: " +findViewById(R.id.cam_right).getY());
-                    Log.d("HUDActivity", "x for cam none: " +findViewById(R.id.cam_none).getX());
-                    Log.d("HUDActivity", "y for cam none: " +findViewById(R.id.cam_none).getY());
-
+                    stopStream();
+                    loadStream(url_left);
                 } else if (checkedId == R.id.cam_right){
-                    // TODO
-                    // close left stream (if open)
                     Log.d("HUDActivity", "cam_right selected");
+                    stopStream();
+                    loadStream(url_right);
                 } else if (checkedId == R.id.cam_none){
-                    // TODO
-                    // close both streams (if open)
-                    // don't waste data
                     Log.d("HUDActivity", "cam_none selected");
+                    stopStream();
                 }
             }
         });
-
-        cam_left = (RadioButton) findViewById(R.id.cam_left);
-        cam_right = (RadioButton) findViewById(R.id.cam_right);
-        cam_none = (RadioButton) findViewById(R.id.cam_none);
 
         try {
             protocol = new Protocol();
@@ -115,19 +101,6 @@ public class HUDActivity extends AppCompatActivity {
         // maybe seperate into two layers
         // 1 for stream
         // 1 for other stuff
-        String URL = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
-
-        mjpegView = new MjpegView(this);
-        try {
-            mjpegView.setSource(MjpegInputStream.read(URL));
-            mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
-            mjpegView.showFps(true);
-            // THIS PROBABLY WON'T WORK!
-            setContentView(findViewById(R.id.stream), mjpegView.getLayoutParams());
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-//        setContentView(mjpegView);
     }
 
     @Override
@@ -194,6 +167,26 @@ public class HUDActivity extends AppCompatActivity {
         } else {
             shape.setLevel(0);
         }
+    }
+
+    private void loadStream(String url){
+        mjpegView = new MjpegView(this);
+        try {
+            mjpegView.setSource(MjpegInputStream.read(url));
+            mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
+            mjpegView.showFps(true);
+            // THIS PROBABLY WON'T WORK!
+            setContentView(findViewById(R.id.stream), mjpegView.getLayoutParams());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+//        setContentView(mjpegView);
+    }
+
+    private void stopStream(){
+        // TODO
+        // stop both streams
+        // and don't waste data
     }
 
     // Update gamepad status indicator
