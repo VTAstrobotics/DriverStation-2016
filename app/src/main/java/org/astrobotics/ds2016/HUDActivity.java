@@ -188,6 +188,8 @@ public class HUDActivity extends AppCompatActivity {
         // TODO
         // stop both streams
         // and don't waste data
+        // hopefully this works
+        mjpegView.stopPlayback();
     }
 
     // Update gamepad status indicator
