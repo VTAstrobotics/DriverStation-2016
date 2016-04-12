@@ -15,6 +15,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -99,7 +100,9 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
             start = System.currentTimeMillis();
             // custom stuff
             // find the stream based on the url
+            Log.d("stream thread.run", "should be starting the stream");
             mIn = MjpegInputStream.read(inputStreamUrl);
+            Log.d("stream thread.run", "should be starting the stream");
 
             PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.DST_OVER);
             Bitmap bm;
@@ -199,6 +202,7 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
     public void setSource(String url){
     //public void setSource(MjpegInputStream source) {
         //mIn = source;
+        Log.d("mjpegview", "setting source");
         this.inputStreamUrl = url;
         startPlayback();
     }
