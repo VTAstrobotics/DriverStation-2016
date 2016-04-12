@@ -172,7 +172,8 @@ public class HUDActivity extends AppCompatActivity {
     private void loadStream(String url){
         mjpegView = (MjpegView) findViewById(R.id.stream);
         try {
-            mjpegView.setSource(MjpegInputStream.read(url));
+            //mjpegView.setSource(MjpegInputStream.read(url));
+            mjpegView.setSource(url);
             mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
             mjpegView.showFps(true);
             // THIS PROBABLY WON'T WORK!
