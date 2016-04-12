@@ -170,13 +170,13 @@ public class HUDActivity extends AppCompatActivity {
     }
 
     private void loadStream(String url){
-        mjpegView = new MjpegView(this);
+        mjpegView = (MjpegView) findViewById(R.id.stream);
         try {
             mjpegView.setSource(MjpegInputStream.read(url));
             mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
             mjpegView.showFps(true);
             // THIS PROBABLY WON'T WORK!
-            setContentView(findViewById(R.id.stream), mjpegView.getLayoutParams());
+//            setContentView(findViewById(R.id.stream), mjpegView.getLayoutParams());
         } catch (Exception e){
             e.printStackTrace();
         }
