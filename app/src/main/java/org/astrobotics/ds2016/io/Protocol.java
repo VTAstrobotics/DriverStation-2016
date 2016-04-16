@@ -329,11 +329,13 @@ public class Protocol {
         public void run() {
             // variables
             double lastTime = System.currentTimeMillis();
+            // ping every x seconds
             double pingFrequency = 2D;
             // while thread can send
             while (!Thread.interrupted() && !socket.isClosed()){
                 if (System.currentTimeMillis() - lastTime > pingFrequency){
                     //ping
+                    // TODO
                     //reset time
                     lastTime = System.currentTimeMillis();
                     // sleep for majority of the frequency
@@ -343,6 +345,17 @@ public class Protocol {
                         e.printStackTrace();
                     }
                 }
+            }
+        }
+    }
+
+    // recieve data from robot
+    private class ReceiveWorker implements Runnable {
+        @Override
+        public void run(){
+            // while the thread can work
+            while(!Thread.interrupted() && !socket.isClosed()) {
+                // reveive the data
             }
         }
     }

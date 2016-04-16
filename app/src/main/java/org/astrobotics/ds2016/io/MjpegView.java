@@ -100,9 +100,7 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
             start = System.currentTimeMillis();
             // custom stuff
             // find the stream based on the url
-            Log.d("stream thread.run", "should be starting the stream");
             mIn = MjpegInputStream.read(inputStreamUrl);
-            Log.d("stream thread.run", "should be starting the stream");
 
             PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.DST_OVER);
             Bitmap bm;

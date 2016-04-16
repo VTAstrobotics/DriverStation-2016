@@ -178,7 +178,6 @@ public class HUDActivity extends AppCompatActivity {
         } catch (Exception e){
             e.printStackTrace();
         }
-//        setContentView(mjpegView);
     }
 
     private void stopStream(){
