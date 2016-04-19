@@ -101,14 +101,12 @@ public class Protocol {
                 wasChanged = controlData.setButton(ControlIDs.RB, pressed);
                 break;
             case KeyEvent.KEYCODE_BACK:
-                // TODO verify Back button maps to Select
                 wasChanged = controlData.setButton(ControlIDs.BACK, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_START:
                 wasChanged = controlData.setButton(ControlIDs.START, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_MODE:
-                // TODO verify Xbox button maps to Mode
                 wasChanged = controlData.setButton(ControlIDs.XBOX, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBL:

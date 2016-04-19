@@ -1,8 +1,6 @@
 package org.astrobotics.ds2016;
 
 import java.io.IOException;
-import java.util.HashMap;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -19,7 +17,6 @@ import android.view.View;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RadioGroup;
 import android.widget.Toast;
-import org.astrobotics.ds2016.io.MjpegInputStream;
 import org.astrobotics.ds2016.io.MjpegView;
 import org.astrobotics.ds2016.io.Protocol;
 
@@ -27,18 +24,16 @@ public class HUDActivity extends AppCompatActivity {
     private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_BRAKE,
             MotionEvent.AXIS_THROTTLE, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
-    private HashMap<Integer, Float> prevJoyState = new HashMap<>();
     private Protocol protocol;
     private MjpegView mjpegView;
-    private RadioGroup streamButtons;
     private final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
     private final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
-    private static final int MENU_QUIT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hud);
+        RadioGroup streamButtons;
 
         // set radio buttons
         streamButtons = (RadioGroup) findViewById(R.id.stream_buttons);
