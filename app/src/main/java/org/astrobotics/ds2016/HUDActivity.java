@@ -182,7 +182,6 @@ public class HUDActivity extends AppCompatActivity {
     }
 
     private void stopStream(){
-        // TODO
         // stop both streams
         // and don't waste data
         // hopefully this works
