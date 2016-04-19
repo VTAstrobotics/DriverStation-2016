@@ -178,6 +178,7 @@ public class HUDActivity extends AppCompatActivity {
         } catch (Exception e){
             e.printStackTrace();
         }
+        mjpegView.setVisibility(View.VISIBLE);
     }
 
     private void stopStream(){
@@ -187,6 +188,7 @@ public class HUDActivity extends AppCompatActivity {
         // hopefully this works
         if (mjpegView != null) {
             mjpegView.stopPlayback();
+            mjpegView.setVisibility(View.INVISIBLE);
         }
     }
 

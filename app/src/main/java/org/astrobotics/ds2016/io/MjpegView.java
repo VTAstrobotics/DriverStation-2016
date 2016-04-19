@@ -175,6 +175,7 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
         while(retry) {
             try {
                 thread.join();
+                thread.interrupt();
                 retry = false;
             } catch (InterruptedException e) {}
         }
