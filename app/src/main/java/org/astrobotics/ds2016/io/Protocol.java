@@ -22,7 +22,10 @@ public class Protocol {
     private DatagramSocket socket;
     private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
     private Thread sendThread;
+    // instance of current control data
     private ControlData controlData;
+    // instance of most recent data received
+    private ReceiveData receiveData;
 
     static {
         try {
@@ -160,6 +163,31 @@ public class Protocol {
         public static final int DPAD_LEFT = 21;
         public static final int DPAD_RIGHT = 22;
         public static final int SIZE = 23;
+    }
+
+    // holds details given from the robot to DS
+    private static class ReceiveData {
+        // if the dead man's switch is on or off
+        boolean isDeadMansDown = false;
+        // holds the battery voltage
+        byte voltage = 0x0;
+        // max value the voltage can be
+        final byte MAX_VOLTAGE = (byte) 100;
+
+        public ReceiveData(){}
+
+        public void setDeadMansDown(boolean b){
+            this.isDeadMansDown = b;
+        }
+        public void setVoltage(byte b){
+            this.voltage = b;
+        }
+        public int getVoltageAsPercent(){
+            return (int) ((this.voltage) / (this.MAX_VOLTAGE));
+        }
+        public String toString(){
+            return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
+        }
     }
 
     private static class ControlData {
@@ -363,6 +391,8 @@ public class Protocol {
             // while the thread can work
             while(!Thread.interrupted() && !socket.isClosed()) {
                 // receive the data
+                // TODO
+                // take it apart
             }
         }
     }
