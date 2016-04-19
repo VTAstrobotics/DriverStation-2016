@@ -116,7 +116,12 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
                         c = mSurfaceHolder.lockCanvas();
                         synchronized (mSurfaceHolder) {
                             try {
-                                bm = mIn.readMjpegFrame();
+                                bm = null;
+                                try {
+                                    bm = mIn.readMjpegFrame();
+                                } catch (NullPointerException e){
+                                    Log.d("MjpegView", "mIn was null!");
+                                }
                                 destRect = destRect(bm.getWidth(),bm.getHeight());
                                 c.drawColor(Color.BLACK);
                                 c.drawBitmap(bm, null, destRect, p);
