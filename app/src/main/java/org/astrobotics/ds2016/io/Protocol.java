@@ -335,7 +335,14 @@ public class Protocol {
             while (!Thread.interrupted() && !socket.isClosed()){
                 if (System.currentTimeMillis() - lastTime > pingFrequency){
                     //ping
-                    // TODO
+                    // magic number
+                    byte [] b = new byte[1];
+                    b[0] = (byte) 26;
+                    try {
+                        socket.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT));
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                    }
                     //reset time
                     lastTime = System.currentTimeMillis();
                     // sleep for majority of the frequency
@@ -355,7 +362,7 @@ public class Protocol {
         public void run(){
             // while the thread can work
             while(!Thread.interrupted() && !socket.isClosed()) {
-                // reveive the data
+                // receive the data
             }
         }
     }
