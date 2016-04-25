@@ -362,8 +362,7 @@ public class Protocol {
                 if (System.currentTimeMillis() - lastTime > pingFrequency){
                     //ping
                     // magic number
-                    byte [] b = new byte[1];
-                    b[0] = (byte) 26;
+                    byte [] b = { ((byte)(26)) };
                     try {
                         socket.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT));
                     } catch(IOException e) {
