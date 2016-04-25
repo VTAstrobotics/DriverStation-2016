@@ -34,6 +34,26 @@
         android:layout_alignParentEnd="true"
         android:layout_margin="4dp"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:gravity="bottom"
+        android:text="@string/cam_left"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:text="@string/cam_none"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:gravity="bottom"
+        android:text="@string/cam_right"/>
+
     <RadioGroup
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
