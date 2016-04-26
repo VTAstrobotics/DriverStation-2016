@@ -41,7 +41,7 @@ public class Protocol {
     }
 
     public void setStick(int axis, float value) {
-        Log.d(TAG, "axis " + axis + ": " + value);
+//        Log.d(TAG, "axis " + axis + ": " + value);
         switch(axis) {
             case MotionEvent.AXIS_X:
                 controlData.setAxis(ControlIDs.LTHUMBX, value);
@@ -58,7 +58,7 @@ public class Protocol {
             case MotionEvent.AXIS_BRAKE:
                 controlData.setAxis(ControlIDs.LTRIGGER, value);
                 break;
-            case MotionEvent.AXIS_THROTTLE:
+            case MotionEvent.AXIS_GAS:
                 controlData.setAxis(ControlIDs.RTRIGGER, value);
                 break;
             case MotionEvent.AXIS_HAT_Y:
@@ -70,13 +70,11 @@ public class Protocol {
             default:
                 return;
         }
-
-        sendData();
     }
 
     // for pressing buttons
     public void sendButton(int keycode, boolean pressed) {
-        Log.d(TAG, "button " + keycode + ": " + pressed);
+//        Log.d(TAG, "button " + keycode + ": " + pressed);
         boolean wasChanged;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
@@ -129,8 +127,8 @@ public class Protocol {
         }
     }
 
-    private void sendData() {
-//        Log.d(TAG, "Adding Data to send queue");
+    public void sendData() {
+        Log.d(TAG, "Adding Data to send queue");
         sendQueue.offer(new ControlData(controlData));
     }
 
@@ -254,7 +252,7 @@ public class Protocol {
 
         // create the binary string with crc at the end
         public byte[] toBits(){
-            Log.d(TAG, "Data: " + Arrays.toString(data));
+//            Log.d(TAG, "Data: " + Arrays.toString(data));
 
             byte[] bits = new byte[11];
 
@@ -288,7 +286,6 @@ public class Protocol {
             buttons1 += data[ControlIDs.B];
             buttons1 = (byte) (buttons1 << 1);
             buttons1 += data[ControlIDs.A];
-            Log.d(TAG, "buttons: " + buttons1 +  " " + buttons2);
             bits[6] = buttons1;
 
             // 1 byte for dpad
