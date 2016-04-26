@@ -16,18 +16,16 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
-import org.astrobotics.ds2016.io.MjpegInputStream;
 import org.astrobotics.ds2016.io.MjpegView;
 import org.astrobotics.ds2016.io.Protocol;
 
 public class HUDActivity extends AppCompatActivity {
+    private static final String TAG = "Astro-Proto-2016";
     private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_BRAKE,
-            MotionEvent.AXIS_THROTTLE, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
+            MotionEvent.AXIS_GAS, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
     private HashMap<Integer, Float> prevJoyState = new HashMap<>();
     private Protocol protocol;
     private MjpegView mjpegView;
