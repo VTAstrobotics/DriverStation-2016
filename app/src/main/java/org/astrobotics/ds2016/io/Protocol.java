@@ -127,6 +127,12 @@ public class Protocol {
         // send the data on change
         if (wasChanged) {
             sendData();
+            // send twice if the button was the deadman switch
+            // TODO
+            // make sure this is the correct button
+            if (keycode == KeyEvent.KEYCODE_BUTTON_L2){
+                sendData();
+            }
         }
     }
 
