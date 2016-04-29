@@ -130,7 +130,7 @@ public class Protocol {
             // send twice if the button was the deadman switch
             // TODO
             // make sure this is the correct button
-            if (keycode == KeyEvent.KEYCODE_BUTTON_L2){
+            if (pressed && keycode == KeyEvent.KEYCODE_BUTTON_L2){
                 sendData();
             }
         }
@@ -418,6 +418,12 @@ public class Protocol {
                 byte[] dataBytes = data.toBits();
                 try {
                     socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
+                    // sleep for a small amount, just to slow down traffic
+                    try {
+                        Thread.sleep(10, 0);
+                    } catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
