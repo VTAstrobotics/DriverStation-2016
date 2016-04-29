@@ -21,7 +21,7 @@ public class Protocol {
     private static final int ROBOT_PORT = 6800;
     private DatagramSocket socket;
     private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
-    private Thread sendThread;
+    private Thread sendThread, pinging;
     // instance of current control data
     private ControlData controlData;
     // instance of most recent data received
@@ -38,8 +38,13 @@ public class Protocol {
     public Protocol() throws IOException {
         socket = new DatagramSocket();
         socket.setReuseAddress(true);
+        // send thread instantaite and begin
         sendThread = new Thread(new SendWorker());
         sendThread.start();
+        // ping thread instantiate and begin
+        pinging = new Thread(new PingWorker());
+        pinging.start();
+        // create the control data object
         this.controlData = new ControlData();
     }
 
