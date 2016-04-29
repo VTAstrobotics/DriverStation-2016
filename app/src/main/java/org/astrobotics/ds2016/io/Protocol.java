@@ -21,7 +21,7 @@ public class Protocol {
     private static final int ROBOT_PORT = 6800;
     private DatagramSocket socket;
     private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
-    private Thread sendThread, pinging;
+    private Thread sendThread, pinging, receiving;
     // instance of current control data
     private ControlData controlData;
     // instance of most recent data received
@@ -44,6 +44,9 @@ public class Protocol {
         // ping thread instantiate and begin
         pinging = new Thread(new PingWorker());
         pinging.start();
+        // receiving thread instantate and begin
+        receiving = new Thread(new ReceiveWorker());
+        receiving.start();
         // create the control data object
         this.controlData = new ControlData();
     }
