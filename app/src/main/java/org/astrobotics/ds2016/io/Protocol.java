@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
@@ -68,7 +67,6 @@ public class Protocol {
                 controlData.setDpad(MotionEvent.AXIS_HAT_X, value);
                 break;
             default:
-                return;
         }
     }
 
