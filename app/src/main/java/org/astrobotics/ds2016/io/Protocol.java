@@ -20,7 +20,7 @@ public class Protocol {
     private static InetAddress ROBOT_ADDRESS = null;
     private static final int ROBOT_PORT = 6800;
     private DatagramSocket socket;
-    private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<ControlData> sendQueue;
     private Thread sendThread, pinging, receiving;
     // instance of current control data
     private ControlData controlData;
@@ -38,6 +38,8 @@ public class Protocol {
     public Protocol() throws IOException {
         socket = new DatagramSocket();
         socket.setReuseAddress(true);
+        // instantiate sendqueue
+        sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
         sendThread = new Thread(new SendWorker());
         sendThread.start();
@@ -48,7 +50,9 @@ public class Protocol {
         receiving = new Thread(new ReceiveWorker());
         receiving.start();
         // create the control data object
-        this.controlData = new ControlData();
+        controlData = new ControlData();
+        // create the receive data
+        receiveData = new ReceiveData();
     }
 
     public void setStick(int axis, float value) {
@@ -180,13 +184,14 @@ public class Protocol {
     // holds details given from the robot to DS
     private static class ReceiveData {
         // if the dead man's switch is on or off
-        boolean isDeadMansDown = false;
+        private boolean isDeadMansDown;
         // holds the battery voltage
-        byte voltage = 0x0;
-        // max value the voltage can be
-        final byte MAX_VOLTAGE = (byte) 100;
+        private byte voltage = 0x0;
 
-        public ReceiveData(){}
+        public ReceiveData(){
+            this.isDeadMansDown = false;
+            this.voltage = 0;
+        }
 
         public void setDeadMansDown(boolean b){
             this.isDeadMansDown = b;
@@ -194,9 +199,13 @@ public class Protocol {
         public void setVoltage(byte b){
             this.voltage = b;
         }
-        public int getVoltageAsPercent(){
-            return (int) ((this.voltage) / (this.MAX_VOLTAGE));
+
+        // returns voltage as an int
+        public int getVoltage(){
+            return ((int) (this.voltage));
         }
+        public boolean getIsDeadMansDown(){ return isDeadMansDown; }
+
         public String toString(){
             return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
         }
