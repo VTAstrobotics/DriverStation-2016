@@ -18,7 +18,7 @@ import android.view.MotionEvent;
 public class Protocol {
     private static final String TAG = "Astro-Proto-2016";
     private static InetAddress ROBOT_ADDRESS = null;
-    private static final int ROBOT_PORT = 6800;
+    private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
     private DatagramSocket socket_send, socket_receive;
     private LinkedBlockingQueue<ControlData> sendQueue;
     private Thread sendThread, pinging, receiving;
@@ -42,6 +42,7 @@ public class Protocol {
         // receive socket creation
         socket_receive = new DatagramSocket();
         socket_receive.setReuseAddress(true);
+        socket_receive.connect(ROBOT_ADDRESS, ROBOT_PORT_RECEIVE);
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
@@ -212,6 +213,12 @@ public class Protocol {
 
         public String toString(){
             return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
+        }
+
+        // this will take apart a datagram packet
+        public boolean read(DatagramPacket data){
+
+            return false;
         }
     }
 
@@ -391,7 +398,7 @@ public class Protocol {
                     // magic number
                     byte [] b = { ((byte)(26)) };
                     try {
-                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT));
+                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT_SEND));
                     } catch(IOException e) {
                         e.printStackTrace();
                     }
@@ -420,11 +427,18 @@ public class Protocol {
                 try{
                     socket_receive.receive(temp_data);
                 } catch (IOException e){
-
+                    Log.d("tag", "error in receive data occured or no data received.... not sure");
+                    continue;
                 }
 
                 // TODO
                 // take it apart
+                byte [] temp_bytes = temp_data.getData();
+                // 0 = deadman
+                // 1 = voltage
+                // 2-3 = crc
+
+
             }
         }
     }
@@ -446,7 +460,7 @@ public class Protocol {
 //                Log.d(TAG, "Sending Data");
                 byte[] dataBytes = data.toBits();
                 try {
-                    socket_send.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
+                    socket_send.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT_SEND));
                     // sleep for a small amount, just to slow down traffic
                     try {
                         Thread.sleep(10, 0);
