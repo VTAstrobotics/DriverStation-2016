@@ -19,7 +19,7 @@ public class Protocol {
     private static final String TAG = "Astro-Proto-2016";
     private static InetAddress ROBOT_ADDRESS = null;
     private static final int ROBOT_PORT = 6800;
-    private DatagramSocket socket;
+    private DatagramSocket socket_send, socket_receive;
     private LinkedBlockingQueue<ControlData> sendQueue;
     private Thread sendThread, pinging, receiving;
     // instance of current control data
@@ -36,8 +36,12 @@ public class Protocol {
     }
 
     public Protocol() throws IOException {
-        socket = new DatagramSocket();
-        socket.setReuseAddress(true);
+        // send socket creation
+        socket_send = new DatagramSocket();
+        socket_send.setReuseAddress(true);
+        // receive socket creation
+        socket_receive = new DatagramSocket();
+        socket_receive.setReuseAddress(true);
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
@@ -381,13 +385,13 @@ public class Protocol {
             // ping every x seconds
             double pingFrequency = 2D;
             // while thread can send
-            while (!Thread.interrupted() && !socket.isClosed()){
+            while (!Thread.interrupted() && !socket_send.isClosed()){
                 if (System.currentTimeMillis() - lastTime > pingFrequency){
                     //ping
                     // magic number
                     byte [] b = { ((byte)(26)) };
                     try {
-                        socket.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT));
+                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT));
                     } catch(IOException e) {
                         e.printStackTrace();
                     }
@@ -409,8 +413,16 @@ public class Protocol {
         @Override
         public void run(){
             // while the thread can work
-            while(!Thread.interrupted() && !socket.isClosed()) {
+            while(!Thread.interrupted() && !socket_receive.isClosed()) {
                 // receive the data
+                // TODO
+                DatagramPacket temp_data = null;
+                try{
+                    socket_receive.receive(temp_data);
+                } catch (IOException e){
+
+                }
+
                 // TODO
                 // take it apart
             }
@@ -423,7 +435,7 @@ public class Protocol {
         public void run() {
             ControlData data;
             // while the thread can send
-            while(!Thread.interrupted() && !socket.isClosed()) {
+            while(!Thread.interrupted() && !socket_send.isClosed()) {
                 // keep running if something is taken from stack
                 try {
                     data = sendQueue.take();
@@ -434,7 +446,7 @@ public class Protocol {
 //                Log.d(TAG, "Sending Data");
                 byte[] dataBytes = data.toBits();
                 try {
-                    socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
+                    socket_send.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
                     // sleep for a small amount, just to slow down traffic
                     try {
                         Thread.sleep(10, 0);

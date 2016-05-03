@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.hardware.input.InputManager;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,40 +15,52 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import org.astrobotics.ds2016.io.MjpegView;
 import org.astrobotics.ds2016.io.Protocol;
 
 public class HUDActivity extends AppCompatActivity {
-    private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
+    private static final int[] AXES = new int[]{MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_BRAKE,
             MotionEvent.AXIS_THROTTLE, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
     private Protocol protocol;
     private MjpegView mjpegView;
     private final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
     private final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hud);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         RadioGroup streamButtons;
 
         // set radio buttons
         streamButtons = (RadioGroup) findViewById(R.id.stream_buttons);
-        streamButtons.setOnCheckedChangeListener(new OnCheckedChangeListener(){
-            public void onCheckedChanged(RadioGroup group, int checkedId){
-                if (checkedId == R.id.cam_left){
+        streamButtons.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.cam_left) {
                     Log.d("HUDActivity", "cam_left selected");
                     stopStream();
                     loadStream(url_left);
-                } else if (checkedId == R.id.cam_right){
+                } else if (checkedId == R.id.cam_right) {
                     Log.d("HUDActivity", "cam_right selected");
                     stopStream();
                     loadStream(url_right);
-                } else if (checkedId == R.id.cam_none){
+                } else if (checkedId == R.id.cam_none) {
                     Log.d("HUDActivity", "cam_none selected");
                     stopStream();
                 }
@@ -56,7 +69,7 @@ public class HUDActivity extends AppCompatActivity {
 
         try {
             protocol = new Protocol();
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error initializing network protocol", Toast.LENGTH_LONG).show();
             finish();
@@ -67,7 +80,7 @@ public class HUDActivity extends AppCompatActivity {
         initIndicator(R.id.controller_status, R.drawable.ic_controller_status);
 
         // Register input device listener
-        InputManager inputManager = (InputManager)getApplicationContext().getSystemService(Context.INPUT_SERVICE);
+        InputManager inputManager = (InputManager) getApplicationContext().getSystemService(Context.INPUT_SERVICE);
         inputManager.getInputDeviceIds(); // required for the device listener to be registered
         inputManager.registerInputDeviceListener(new InputManager.InputDeviceListener() {
             @Override
@@ -96,6 +109,9 @@ public class HUDActivity extends AppCompatActivity {
         // maybe seperate into two layers
         // 1 for stream
         // 1 for other stuff
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -108,10 +124,10 @@ public class HUDActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                  | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                  | View.SYSTEM_UI_FLAG_FULLSCREEN
-                  | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-        if(hasFocus) {
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        if (hasFocus) {
             flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         }
         getWindow().getDecorView().setSystemUiVisibility(flags);
@@ -119,7 +135,7 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             protocol.sendButton(keyCode, true);
             return true;
         }
@@ -128,7 +144,7 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             protocol.sendButton(keyCode, false);
             return true;
         }
@@ -137,8 +153,8 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        if((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
-            for(int axis : AXES) {
+        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
+            for (int axis : AXES) {
                 protocol.setStick(axis, event.getAxisValue(axis));
             }
             return true;
@@ -149,34 +165,34 @@ public class HUDActivity extends AppCompatActivity {
     // Sets indicator icon
     @SuppressWarnings("deprecation")
     private void initIndicator(int viewId, int iconId) {
-        LayerDrawable layers = (LayerDrawable)findViewById(viewId).getBackground();
+        LayerDrawable layers = (LayerDrawable) findViewById(viewId).getBackground();
         layers.setDrawableByLayerId(R.id.indicator_icon, getResources().getDrawable(iconId));
     }
 
     // Change background color of indicator shape
     private void setIndicator(int viewId, boolean activated) {
-        LayerDrawable layers = (LayerDrawable)findViewById(viewId).getBackground();
+        LayerDrawable layers = (LayerDrawable) findViewById(viewId).getBackground();
         Drawable shape = layers.findDrawableByLayerId(R.id.indicator_bg);
-        if(activated) {
+        if (activated) {
             shape.setLevel(1);
         } else {
             shape.setLevel(0);
         }
     }
 
-    private void loadStream(String url){
+    private void loadStream(String url) {
         mjpegView = (MjpegView) findViewById(R.id.stream);
         try {
             mjpegView.setSource(url);
             mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
             mjpegView.showFps(true);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         mjpegView.setVisibility(View.VISIBLE);
     }
 
-    private void stopStream(){
+    private void stopStream() {
         // stop both streams
         // and don't waste data
         // hopefully this works
@@ -189,16 +205,56 @@ public class HUDActivity extends AppCompatActivity {
     // Update gamepad status indicator
     private void updateGamepadStatus() {
         int gamepadCheck = InputDevice.SOURCE_GAMEPAD
-                         | InputDevice.SOURCE_JOYSTICK;
+                | InputDevice.SOURCE_JOYSTICK;
 //                         | InputDevice.SOURCE_DPAD;
-        for(int id : InputDevice.getDeviceIds()) {
+        for (int id : InputDevice.getDeviceIds()) {
             InputDevice device = InputDevice.getDevice(id);
             int sources = device.getSources();
-            if((sources & gamepadCheck) == gamepadCheck) {
+            if ((sources & gamepadCheck) == gamepadCheck) {
                 setIndicator(R.id.controller_status, true);
                 return;
             }
         }
         setIndicator(R.id.controller_status, false);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "HUD Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://org.astrobotics.ds2016/http/host/path")
+        );
+        AppIndex.AppIndexApi.start(client, viewAction);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Action viewAction = Action.newAction(
+                Action.TYPE_VIEW, // TODO: choose an action type.
+                "HUD Page", // TODO: Define a title for the content shown.
+                // TODO: If you have web page content that matches this app activity's content,
+                // make sure this auto-generated web page URL is correct.
+                // Otherwise, set the URL to null.
+                Uri.parse("http://host/path"),
+                // TODO: Make sure this auto-generated app deep link URI is correct.
+                Uri.parse("android-app://org.astrobotics.ds2016/http/host/path")
+        );
+        AppIndex.AppIndexApi.end(client, viewAction);
+        client.disconnect();
     }
 }
