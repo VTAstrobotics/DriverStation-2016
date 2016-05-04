@@ -431,13 +431,16 @@ public class Protocol {
                     continue;
                 }
 
-                // TODO
                 // take it apart
                 byte [] temp_bytes = temp_data.getData();
                 // 0 = deadman
                 // 1 = voltage
                 // 2-3 = crc
-
+                // check the crc
+                // TODO
+                // handle the actual data
+                receiveData.setDeadMansDown( temp_bytes[0] != 0 );
+                receiveData.setVoltage( temp_bytes[1] );
 
             }
         }
