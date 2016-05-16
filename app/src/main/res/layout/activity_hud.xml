@@ -81,7 +81,7 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="bottom"
-            android:buttonTint="#505bf5"/>
+            android:buttonTint="#505bf5" android:checked="true"/>
         <RadioButton
             android:id="@+id/cam_right"
             android:layout_width="40dp"
