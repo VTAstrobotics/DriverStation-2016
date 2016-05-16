@@ -38,21 +38,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/cam_text_color"
-        android:gravity="bottom"
-        android:text="@string/cam_left"/>
+        android:text="@string/cam_left"
+        android:layout_alignParentBottom="true" android:layout_toLeftOf="@+id/stream_buttons"
+        android:layout_toStartOf="@+id/stream_buttons"
+        android:layout_alignTop="@+id/stream_buttons" android:layout_gravity="center"
+        android:gravity="center"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/cam_text_color"
-        android:text="@string/cam_none"/>
+        android:text="@string/cam_none"
+        android:layout_above="@+id/stream_buttons" android:layout_centerHorizontal="true"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/cam_text_color"
-        android:gravity="bottom"
-        android:text="@string/cam_right"/>
+        android:gravity="center"
+        android:text="@string/cam_right"
+        android:layout_alignParentBottom="true" android:layout_toRightOf="@+id/stream_buttons"
+        android:layout_toEndOf="@+id/stream_buttons" android:layout_alignTop="@+id/stream_buttons"
+        android:layout_gravity="center"/>
 
     <RadioGroup
         android:layout_width="wrap_content"
