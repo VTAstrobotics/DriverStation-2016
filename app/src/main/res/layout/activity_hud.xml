@@ -2,6 +2,18 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="#0099cc" tools:context=".HUDActivity">
 
+    <org.astrobotics.ds2016.io.MjpegView
+        android:id="@+id/stream"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:visibility="invisible"
+        />
+
     <View
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -22,16 +34,60 @@
         android:layout_alignParentEnd="true"
         android:layout_margin="4dp"/>
 
-    <LinearLayout
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:text="@string/cam_left"
+        android:layout_alignParentBottom="true" android:layout_toLeftOf="@+id/stream_buttons"
+        android:layout_toStartOf="@+id/stream_buttons"
+        android:layout_alignTop="@+id/stream_buttons" android:layout_gravity="center"
+        android:gravity="center"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:text="@string/cam_none"
+        android:layout_above="@+id/stream_buttons" android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/cam_text_color"
+        android:gravity="center"
+        android:text="@string/cam_right"
+        android:layout_alignParentBottom="true" android:layout_toRightOf="@+id/stream_buttons"
+        android:layout_toEndOf="@+id/stream_buttons" android:layout_alignTop="@+id/stream_buttons"
+        android:layout_gravity="center"/>
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/stream_buttons"
         android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/robot_status"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true">
-    </LinearLayout>
+        android:layout_gravity="bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="#505bf5">
+        <RadioButton
+            android:id="@+id/cam_left"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"
+            android:buttonTint="#505bf5"/>
+        <RadioButton
+            android:id="@+id/cam_none"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"
+            android:buttonTint="#505bf5"/>
+        <RadioButton
+            android:id="@+id/cam_right"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="bottom"
+            android:buttonTint="#505bf5"/>
+    </RadioGroup>
 
 </RelativeLayout>

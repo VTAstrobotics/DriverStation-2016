@@ -15,6 +15,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -30,6 +31,7 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
 
     private MjpegViewThread thread;
     private MjpegInputStream mIn = null;
+    private String inputStreamUrl = null;
     private boolean showFps = false;
     private boolean mRun = false;
     private boolean surfaceDone = false;
@@ -96,6 +98,10 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
 
         public void run() {
             start = System.currentTimeMillis();
+            // custom stuff
+            // find the stream based on the url
+            mIn = MjpegInputStream.read(inputStreamUrl);
+
             PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.DST_OVER);
             Bitmap bm;
             int width;
@@ -110,7 +116,12 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
                         c = mSurfaceHolder.lockCanvas();
                         synchronized (mSurfaceHolder) {
                             try {
-                                bm = mIn.readMjpegFrame();
+                                bm = null;
+                                try {
+                                    bm = mIn.readMjpegFrame();
+                                } catch (NullPointerException e){
+                                    Log.d("MjpegView", "mIn was null!");
+                                }
                                 destRect = destRect(bm.getWidth(),bm.getHeight());
                                 c.drawColor(Color.BLACK);
                                 c.drawBitmap(bm, null, destRect, p);
@@ -156,21 +167,25 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void startPlayback() {
-        if(mIn != null) {
+        if(inputStreamUrl != null) {
             mRun = true;
+            thread = new MjpegViewThread(getHolder(), getContext());
             thread.start();
         }
     }
 
     public void stopPlayback() {
         mRun = false;
+        inputStreamUrl = null;
         boolean retry = true;
-        while(retry) {
+        /*
+        while (retry) {
             try {
                 thread.join();
                 retry = false;
             } catch (InterruptedException e) {}
         }
+        */
     }
 
     public MjpegView(Context context, AttributeSet attrs) { super(context, attrs); init(context); }
@@ -191,8 +206,11 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
     public void showFps(boolean b) {
         showFps = b;
     }
-    public void setSource(MjpegInputStream source) {
-        mIn = source;
+    public void setSource(String url){
+    //public void setSource(MjpegInputStream source) {
+        //mIn = source;
+        Log.d("mjpegview", "setting source");
+        this.inputStreamUrl = url;
         startPlayback();
     }
     public void setOverlayPaint(Paint p) {

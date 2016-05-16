@@ -17,11 +17,14 @@ import android.view.MotionEvent;
 public class Protocol {
     private static final String TAG = "Astro-Proto-2016";
     private static InetAddress ROBOT_ADDRESS = null;
-    private static final int ROBOT_PORT = 6800;
-    private DatagramSocket socket;
-    private LinkedBlockingQueue<ControlData> sendQueue = new LinkedBlockingQueue<>();
-    private Thread sendThread;
+    private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
+    private DatagramSocket socket_send, socket_receive;
+    private LinkedBlockingQueue<ControlData> sendQueue;
+    private Thread sendThread, pinging, receiving;
+    // instance of current control data
     private ControlData controlData;
+    // instance of most recent data received
+    private ReceiveData receiveData;
 
     static {
         try {
@@ -32,11 +35,28 @@ public class Protocol {
     }
 
     public Protocol() throws IOException {
-        socket = new DatagramSocket();
-        socket.setReuseAddress(true);
+        // send socket creation
+        socket_send = new DatagramSocket();
+        socket_send.setReuseAddress(true);
+        // receive socket creation
+        socket_receive = new DatagramSocket();
+        socket_receive.setReuseAddress(true);
+        socket_receive.connect(ROBOT_ADDRESS, ROBOT_PORT_RECEIVE);
+        // instantiate sendqueue
+        sendQueue = new LinkedBlockingQueue<>();
+        // send thread instantaite and begin
         sendThread = new Thread(new SendWorker());
         sendThread.start();
-        this.controlData = new ControlData();
+        // ping thread instantiate and begin
+        pinging = new Thread(new PingWorker());
+        pinging.start();
+        // receiving thread instantate and begin
+        receiving = new Thread(new ReceiveWorker());
+        receiving.start();
+        // create the control data object
+        controlData = new ControlData();
+        // create the receive data
+        receiveData = new ReceiveData();
     }
 
     public void setStick(int axis, float value) {
@@ -94,14 +114,12 @@ public class Protocol {
                 wasChanged = controlData.setButton(ControlIDs.RB, pressed);
                 break;
             case KeyEvent.KEYCODE_BACK:
-                // TODO verify Back button maps to Select
                 wasChanged = controlData.setButton(ControlIDs.BACK, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_START:
                 wasChanged = controlData.setButton(ControlIDs.START, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_MODE:
-                // TODO verify Xbox button maps to Mode
                 wasChanged = controlData.setButton(ControlIDs.XBOX, pressed);
                 break;
             case KeyEvent.KEYCODE_BUTTON_THUMBL:
@@ -122,6 +140,12 @@ public class Protocol {
         // send the data on change
         if (wasChanged) {
             sendData();
+            // send twice if the button was the deadman switch
+            // TODO
+            // make sure this is the correct button
+            if (pressed && keycode == KeyEvent.KEYCODE_BUTTON_L2){
+                sendData();
+            }
         }
     }
 
@@ -156,6 +180,42 @@ public class Protocol {
         public static final int DPAD_LEFT = 21;
         public static final int DPAD_RIGHT = 22;
         public static final int SIZE = 23;
+    }
+
+    // holds details given from the robot to DS
+    private static class ReceiveData {
+        // if the dead man's switch is on or off
+        private boolean isDeadMansDown;
+        // holds the battery voltage
+        private byte voltage = 0x0;
+
+        public ReceiveData(){
+            this.isDeadMansDown = false;
+            this.voltage = 0;
+        }
+
+        public void setDeadMansDown(boolean b){
+            this.isDeadMansDown = b;
+        }
+        public void setVoltage(byte b){
+            this.voltage = b;
+        }
+
+        // returns voltage as an int
+        public int getVoltage(){
+            return ((int) (this.voltage));
+        }
+        public boolean getIsDeadMansDown(){ return isDeadMansDown; }
+
+        public String toString(){
+            return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
+        }
+
+        // this will take apart a datagram packet
+        public boolean read(DatagramPacket data){
+
+            return false;
+        }
     }
 
     private static class ControlData {
@@ -324,11 +384,19 @@ public class Protocol {
         public void run() {
             // variables
             double lastTime = System.currentTimeMillis();
+            // ping every x seconds
             double pingFrequency = 2D;
             // while thread can send
-            while (!Thread.interrupted() && !socket.isClosed()){
+            while (!Thread.interrupted() && !socket_send.isClosed()){
                 if (System.currentTimeMillis() - lastTime > pingFrequency){
                     //ping
+                    // magic number
+                    byte [] b = { ((byte)(26)) };
+                    try {
+                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT_SEND));
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                    }
                     //reset time
                     lastTime = System.currentTimeMillis();
                     // sleep for majority of the frequency
@@ -342,13 +410,44 @@ public class Protocol {
         }
     }
 
+    // recieve data from robot
+    private class ReceiveWorker implements Runnable {
+        @Override
+        public void run(){
+            // while the thread can work
+            while(!Thread.interrupted() && !socket_receive.isClosed()) {
+                // receive the data
+                // TODO
+                DatagramPacket temp_data = null;
+                try{
+                    socket_receive.receive(temp_data);
+                } catch (IOException e){
+                    Log.d("tag", "error in receive data occured or no data received.... not sure");
+                    continue;
+                }
+
+                // take it apart
+                byte [] temp_bytes = temp_data.getData();
+                // 0 = deadman
+                // 1 = voltage
+                // 2-3 = crc
+                // check the crc
+                // TODO
+                // handle the actual data
+                receiveData.setDeadMansDown( temp_bytes[0] != 0 );
+                receiveData.setVoltage( temp_bytes[1] );
+
+            }
+        }
+    }
+
     // send the data from the queue in a thread
     private class SendWorker implements Runnable {
         @Override
         public void run() {
             ControlData data;
             // while the thread can send
-            while(!Thread.interrupted() && !socket.isClosed()) {
+            while(!Thread.interrupted() && !socket_send.isClosed()) {
                 // keep running if something is taken from stack
                 try {
                     data = sendQueue.take();
@@ -359,7 +458,13 @@ public class Protocol {
 //                Log.d(TAG, "Sending Data");
                 byte[] dataBytes = data.toBits();
                 try {
-                    socket.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT));
+                    socket_send.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT_SEND));
+                    // sleep for a small amount, just to slow down traffic
+                    try {
+                        Thread.sleep(10, 0);
+                    } catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
