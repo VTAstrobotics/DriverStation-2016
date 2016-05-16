@@ -119,18 +119,23 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
             while (mRun) {
                 if(surfaceDone) {
                     try {
-                        c = mSurfaceHolder.lockCanvas();
+                        // First try reading the frame
+                        Log.d(TAG, "Reading frame");
+                        bm = mIn.readMjpegFrame();
+                        Log.d(TAG, "DONE Frame read");
+                        if(bm == null) {
+                            Log.d(TAG, "Received null camera frame");
+                            continue;
+                        }
+
+                        // Do not lock canvas until frame is fully read
                         synchronized (mSurfaceHolder) {
-                            try {
-                                bm = null;
-                                bm = mIn.readMjpegFrame();
-                                if(bm == null) {
-                                    Log.d(TAG, "Received null camera frame");
-                                    continue;
-                                }
-                                destRect = destRect(bm.getWidth(),bm.getHeight());
+                            c = mSurfaceHolder.lockCanvas();
+                            destRect = destRect(bm.getWidth(), bm.getHeight());
                                 c.drawColor(Color.BLACK);
+                            Log.d(TAG, "Drawing bitmap");
                                 c.drawBitmap(bm, null, destRect, p);
+                            Log.d(TAG, "DONE Bitmap drawn");
                                 if(showFps) {
                                     p.setXfermode(mode);
                                     if(ovl != null) {
@@ -147,8 +152,8 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
                                         ovl = makeFpsOverlay(overlayPaint, fps);
                                     }
                                 }
-                            } catch (IOException e) {}
                         }
+                    } catch(IOException e) {
                     } finally { if (c != null) mSurfaceHolder.unlockCanvasAndPost(c); }
                 }
             }

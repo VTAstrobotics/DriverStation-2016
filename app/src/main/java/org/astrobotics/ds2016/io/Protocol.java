@@ -50,17 +50,17 @@ public class Protocol {
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
-        sendThread = new Thread(new SendWorker());
+        sendThread = new Thread(new SendWorker(), "Send Thread");
         sendThread.start();
         // create the control data object
         controlData = new ControlData();
 
         // ping thread instantiate and begin
-        pinging = new Thread(new PingWorker());
+        pinging = new Thread(new PingWorker(), "Ping Thread");
 //        pinging.start(); // TODO verify pinging works
 
         // receiving thread instantate and begin
-        receiving = new Thread(new ReceiveWorker());
+        receiving = new Thread(new ReceiveWorker(), "Receive Thread");
 //        receiving.start(); // TODO verify receiving works
         // create the receive data
         receiveData = new ReceiveData();
