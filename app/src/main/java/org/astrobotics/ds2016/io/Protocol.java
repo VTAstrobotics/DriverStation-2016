@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,7 +17,7 @@ import android.view.MotionEvent;
  * Implements the network protocol
  */
 public class Protocol {
-    private static final String TAG = "Astro-Proto-2016";
+//    private static final String TAG = "Astro-Proto-2016";
     private static final int DEADMAN = KeyEvent.KEYCODE_BUTTON_L1;
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
     private static InetAddress ROBOT_ADDRESS = null;
@@ -44,7 +46,6 @@ public class Protocol {
         // receive socket creation
         socket_receive = new DatagramSocket();
         socket_receive.setReuseAddress(true);
-        socket_receive.connect(ROBOT_ADDRESS, ROBOT_PORT_RECEIVE);
 
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
@@ -157,7 +158,7 @@ public class Protocol {
     }
 
     public void sendData() {
-        Log.d(TAG, "Adding Data to send queue");
+//        Log.d(TAG, "Adding Data to send queue");
         sendQueue.offer(new ControlData(controlData));
     }
 
@@ -419,6 +420,14 @@ public class Protocol {
     private class ReceiveWorker implements Runnable {
         @Override
         public void run(){
+            // initialize socket on dedicated thread
+            try {
+                socket_receive.bind(new InetSocketAddress(ROBOT_PORT_RECEIVE));
+            } catch(SocketException e) {
+                e.printStackTrace();
+                return;
+            }
+
             // while the thread can work
             while(!Thread.interrupted() && !socket_receive.isClosed()) {
                 byte[] temp_bytes = new byte[ReceiveData.SIZE];
@@ -449,6 +458,7 @@ public class Protocol {
         @Override
         public void run() {
             ControlData data;
+
             // while the thread can send
             while(!Thread.interrupted() && !socket_send.isClosed()) {
                 // keep running if something is taken from stack
