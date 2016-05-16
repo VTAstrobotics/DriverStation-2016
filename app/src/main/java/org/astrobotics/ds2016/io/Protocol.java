@@ -16,11 +16,14 @@ import android.view.MotionEvent;
  */
 public class Protocol {
     private static final String TAG = "Astro-Proto-2016";
-    private static InetAddress ROBOT_ADDRESS = null;
+    private static final int DEADMAN = KeyEvent.KEYCODE_BUTTON_L1;
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
+    private static InetAddress ROBOT_ADDRESS = null;
+
     private DatagramSocket socket_send, socket_receive;
     private LinkedBlockingQueue<ControlData> sendQueue;
     private Thread sendThread, pinging, receiving;
+
     // instance of current control data
     private ControlData controlData;
     // instance of most recent data received
@@ -42,25 +45,27 @@ public class Protocol {
         socket_receive = new DatagramSocket();
         socket_receive.setReuseAddress(true);
         socket_receive.connect(ROBOT_ADDRESS, ROBOT_PORT_RECEIVE);
+
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
         sendThread = new Thread(new SendWorker());
         sendThread.start();
-        // ping thread instantiate and begin
-        pinging = new Thread(new PingWorker());
-        pinging.start();
-        // receiving thread instantate and begin
-        receiving = new Thread(new ReceiveWorker());
-        receiving.start();
         // create the control data object
         controlData = new ControlData();
+
+        // ping thread instantiate and begin
+        pinging = new Thread(new PingWorker());
+//        pinging.start(); // TODO verify pinging works
+
+        // receiving thread instantate and begin
+        receiving = new Thread(new ReceiveWorker());
+//        receiving.start(); // TODO verify receiving works
         // create the receive data
         receiveData = new ReceiveData();
     }
 
     public void setStick(int axis, float value) {
-//        Log.d(TAG, "axis " + axis + ": " + value);
         switch(axis) {
             case MotionEvent.AXIS_X:
                 controlData.setAxis(ControlIDs.LTHUMBX, value);
@@ -92,7 +97,6 @@ public class Protocol {
 
     // for pressing buttons
     public void sendButton(int keycode, boolean pressed) {
-//        Log.d(TAG, "button " + keycode + ": " + pressed);
         boolean wasChanged;
         switch(keycode) {
             case KeyEvent.KEYCODE_BUTTON_A:
@@ -137,14 +141,17 @@ public class Protocol {
             default:
                 return;
         }
+
         // send the data on change
         if (wasChanged) {
             sendData();
-            // send twice if the button was the deadman switch
-            // TODO
-            // make sure this is the correct button
-            if (pressed && keycode == KeyEvent.KEYCODE_BUTTON_L2){
+            // send twice if the button was released
+            if(!pressed) {
                 sendData();
+                // send again if the button released was deadman
+                if(keycode == DEADMAN) {
+                    sendData();
+                }
             }
         }
     }
@@ -184,6 +191,8 @@ public class Protocol {
 
     // holds details given from the robot to DS
     private static class ReceiveData {
+        public static final int SIZE = 4;
+
         // if the dead man's switch is on or off
         private boolean isDeadMansDown;
         // holds the battery voltage
@@ -205,32 +214,29 @@ public class Protocol {
         public int getVoltage(){
             return ((int) (this.voltage));
         }
-        public boolean getIsDeadMansDown(){ return isDeadMansDown; }
+
+        public boolean getIsDeadMansDown() {
+            return isDeadMansDown;
+        }
 
         public String toString(){
             return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
         }
-
-        // this will take apart a datagram packet
-        public boolean read(DatagramPacket data){
-
-            return false;
-        }
     }
 
     private static class ControlData {
+        // for if the axis doesn't return to exactly 0 used + or -
+        private static final double AXIS_BOUNDS = 0.1;
+        // max/min axis values can be
+        private static final double AXIS_MAX = 1.0;
+        // max value byte should be
+        private static final int AXIS_BYTE_MAX = 100;
+        // for the dead zone in the dpad
+        private static final double DPAD_BOUNDS = 0.1;
+
         // array for data, everything can be stored in byte,
         // though for buttons, only one bit will be used
         public byte data[];
-        // for if the axis doesn't return to exactly 0 used + or -
-        private final double AXIS_BOUNDS = 0.1;
-        // max/min axis values can be
-        private final double AXIS_MAX = 1.0;
-        // max value byte should be
-        private final int AXIS_BYTE_MAX = 100;
-        // for the dead zone in the dpad
-        private final double DPAD_BOUNDS = 0.1;
-
 
         // default constructor
         public ControlData() {
@@ -311,7 +317,6 @@ public class Protocol {
         // create the binary string with crc at the end
         public byte[] toBits(){
 //            Log.d(TAG, "Data: " + Arrays.toString(data));
-
             byte[] bits = new byte[11];
 
             // do stuff to array
@@ -416,9 +421,10 @@ public class Protocol {
         public void run(){
             // while the thread can work
             while(!Thread.interrupted() && !socket_receive.isClosed()) {
+                byte[] temp_bytes = new byte[ReceiveData.SIZE];
+                DatagramPacket temp_data = new DatagramPacket(temp_bytes, temp_bytes.length);
+
                 // receive the data
-                // TODO
-                DatagramPacket temp_data = null;
                 try{
                     socket_receive.receive(temp_data);
                 } catch (IOException e){
@@ -427,16 +433,13 @@ public class Protocol {
                 }
 
                 // take it apart
-                byte [] temp_bytes = temp_data.getData();
                 // 0 = deadman
                 // 1 = voltage
                 // 2-3 = crc
-                // check the crc
-                // TODO
+                // TODO check the crc
                 // handle the actual data
                 receiveData.setDeadMansDown( temp_bytes[0] != 0 );
                 receiveData.setVoltage( temp_bytes[1] );
-
             }
         }
     }
@@ -460,11 +463,11 @@ public class Protocol {
                 try {
                     socket_send.send(new DatagramPacket(dataBytes, dataBytes.length, ROBOT_ADDRESS, ROBOT_PORT_SEND));
                     // sleep for a small amount, just to slow down traffic
-                    try {
-                        Thread.sleep(10, 0);
-                    } catch (InterruptedException e){
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        Thread.sleep(10, 0);
+//                    } catch (InterruptedException e){
+//                        e.printStackTrace();
+//                    }
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
