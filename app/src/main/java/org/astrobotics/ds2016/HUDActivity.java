@@ -1,6 +1,7 @@
 package org.astrobotics.ds2016;
 
 import java.io.IOException;
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -42,15 +43,15 @@ public class HUDActivity extends AppCompatActivity {
         streamButtons = (RadioGroup) findViewById(R.id.stream_buttons);
         streamButtons.setOnCheckedChangeListener(new OnCheckedChangeListener() {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == R.id.cam_left) {
+                if(checkedId == R.id.cam_left) {
                     Log.d("HUDActivity", "cam_left selected");
                     stopStream();
                     loadStream(url_left);
-                } else if (checkedId == R.id.cam_right) {
+                } else if(checkedId == R.id.cam_right) {
                     Log.d("HUDActivity", "cam_right selected");
                     stopStream();
                     loadStream(url_right);
-                } else if (checkedId == R.id.cam_none) {
+                } else if(checkedId == R.id.cam_none) {
                     Log.d("HUDActivity", "cam_none selected");
                     stopStream();
                 }
@@ -59,7 +60,7 @@ public class HUDActivity extends AppCompatActivity {
 
         try {
             protocol = new Protocol();
-        } catch (IOException e) {
+        } catch(IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error initializing network protocol", Toast.LENGTH_LONG).show();
             finish();
@@ -114,7 +115,7 @@ public class HUDActivity extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-        if (hasFocus) {
+        if(hasFocus) {
             flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         }
         getWindow().getDecorView().setSystemUiVisibility(flags);
@@ -122,7 +123,7 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             protocol.sendButton(keyCode, true);
             return true;
         }
@@ -131,7 +132,7 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        if((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             protocol.sendButton(keyCode, false);
             return true;
         }
@@ -140,8 +141,8 @@ public class HUDActivity extends AppCompatActivity {
 
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
-            for (int axis : AXES) {
+        if((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
+            for(int axis : AXES) {
                 protocol.setStick(axis, event.getAxisValue(axis));
             }
             protocol.sendData();
@@ -161,7 +162,7 @@ public class HUDActivity extends AppCompatActivity {
     private void setIndicator(int viewId, boolean activated) {
         LayerDrawable layers = (LayerDrawable) findViewById(viewId).getBackground();
         Drawable shape = layers.findDrawableByLayerId(R.id.indicator_bg);
-        if (activated) {
+        if(activated) {
             shape.setLevel(1);
         } else {
             shape.setLevel(0);
@@ -174,7 +175,7 @@ public class HUDActivity extends AppCompatActivity {
             mjpegView.setSource(url);
             mjpegView.setDisplayMode(MjpegView.SIZE_BEST_FIT);
             mjpegView.showFps(true);
-        } catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
         }
         mjpegView.setVisibility(View.VISIBLE);
@@ -184,7 +185,7 @@ public class HUDActivity extends AppCompatActivity {
         // stop both streams
         // and don't waste data
         // hopefully this works
-        if (mjpegView != null) {
+        if(mjpegView != null) {
             mjpegView.stopPlayback();
             mjpegView.setVisibility(View.INVISIBLE);
         }
@@ -195,10 +196,10 @@ public class HUDActivity extends AppCompatActivity {
         int gamepadCheck = InputDevice.SOURCE_GAMEPAD
                 | InputDevice.SOURCE_JOYSTICK;
 //                         | InputDevice.SOURCE_DPAD;
-        for (int id : InputDevice.getDeviceIds()) {
+        for(int id : InputDevice.getDeviceIds()) {
             InputDevice device = InputDevice.getDevice(id);
             int sources = device.getSources();
-            if ((sources & gamepadCheck) == gamepadCheck) {
+            if((sources & gamepadCheck) == gamepadCheck) {
                 setIndicator(R.id.controller_status, true);
                 return;
             }

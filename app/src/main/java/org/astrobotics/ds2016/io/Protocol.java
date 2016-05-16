@@ -17,7 +17,7 @@ import android.view.MotionEvent;
  * Implements the network protocol
  */
 public class Protocol {
-//    private static final String TAG = "Astro-Proto-2016";
+    //    private static final String TAG = "Astro-Proto-2016";
     private static final int DEADMAN = KeyEvent.KEYCODE_BUTTON_L1;
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
     private static InetAddress ROBOT_ADDRESS = null;
@@ -144,7 +144,7 @@ public class Protocol {
         }
 
         // send the data on change
-        if (wasChanged) {
+        if(wasChanged) {
             sendData();
             // send twice if the button was released
             if(!pressed) {
@@ -199,20 +199,21 @@ public class Protocol {
         // holds the battery voltage
         private byte voltage = 0x0;
 
-        public ReceiveData(){
+        public ReceiveData() {
             this.isDeadMansDown = false;
             this.voltage = 0;
         }
 
-        public void setDeadMansDown(boolean b){
+        public void setDeadMansDown(boolean b) {
             this.isDeadMansDown = b;
         }
-        public void setVoltage(byte b){
+
+        public void setVoltage(byte b) {
             this.voltage = b;
         }
 
         // returns voltage as an int
-        public int getVoltage(){
+        public int getVoltage() {
             return ((int) (this.voltage));
         }
 
@@ -220,8 +221,8 @@ public class Protocol {
             return isDeadMansDown;
         }
 
-        public String toString(){
-            return "Dead Man's: " +isDeadMansDown +" , Voltage: " +voltage;
+        public String toString() {
+            return "Dead Man's: " + isDeadMansDown + " , Voltage: " + voltage;
         }
     }
 
@@ -245,10 +246,10 @@ public class Protocol {
         }
 
         // copy constructor
-        public ControlData(ControlData oldData){
+        public ControlData(ControlData oldData) {
             this.data = new byte[oldData.data.length];
             // deep copy old data
-            for (int i = 0; i < oldData.data.length; i++){
+            for(int i = 0; i < oldData.data.length; i++) {
                 this.data[i] = oldData.data[i];
             }
         }
@@ -256,9 +257,9 @@ public class Protocol {
         // sets button to on/off
         // assumes they gave an ID of a button
         // returns true if button was changed, false if not
-        public boolean setButton(int ID, boolean down){
+        public boolean setButton(int ID, boolean down) {
             byte oldval = data[ID];
-            if (down){
+            if(down) {
                 data[ID] = 0x01;
             } else {
                 data[ID] = 0x00;
@@ -268,45 +269,42 @@ public class Protocol {
 
         // assumes the id is for an axis
         // takes value from -1 to 1 and converts to specified range
-        public void setAxis(int ID, double value){
-            if (value > AXIS_BOUNDS){
+        public void setAxis(int ID, double value) {
+            if(value > AXIS_BOUNDS) {
                 // truncate and make for 0 to 100
                 int tVal = (int) (AXIS_BYTE_MAX * (value / AXIS_MAX));
-                if (tVal > AXIS_BYTE_MAX){
+                if(tVal > AXIS_BYTE_MAX) {
                     data[ID] = AXIS_BYTE_MAX;
                 } else {
                     data[ID] = ((byte) tVal);
                 }
-            }
-            else if (value < -AXIS_BOUNDS){
+            } else if(value < -AXIS_BOUNDS) {
                 int tVal = (int) (AXIS_BYTE_MAX * (value / -AXIS_MAX));
-                if (tVal > AXIS_BYTE_MAX){
+                if(tVal > AXIS_BYTE_MAX) {
                     data[ID] = -AXIS_BYTE_MAX;
                 } else {
                     data[ID] = ((byte) -tVal);
                 }
-            }
-            else {
+            } else {
                 data[ID] = 0x00;
             }
         }
 
         // dpad comes as a float, but should be set to on or off
-        public void setDpad(int eventCode, float value){
-            if (eventCode == MotionEvent.AXIS_HAT_X) {
-                if (value > DPAD_BOUNDS) {
+        public void setDpad(int eventCode, float value) {
+            if(eventCode == MotionEvent.AXIS_HAT_X) {
+                if(value > DPAD_BOUNDS) {
                     data[ControlIDs.DPAD_RIGHT] = 0x01;
-                } else if (value < -DPAD_BOUNDS){
+                } else if(value < -DPAD_BOUNDS) {
                     data[ControlIDs.DPAD_LEFT] = 0x01;
                 } else {
                     data[ControlIDs.DPAD_LEFT] = 0x00;
                     data[ControlIDs.DPAD_RIGHT] = 0x00;
                 }
-            }
-            else if (eventCode == MotionEvent.AXIS_HAT_Y) {
-                if (value > DPAD_BOUNDS) {
+            } else if(eventCode == MotionEvent.AXIS_HAT_Y) {
+                if(value > DPAD_BOUNDS) {
                     data[ControlIDs.DPAD_DOWN] = 0x01;
-                } else if (value < -DPAD_BOUNDS){
+                } else if(value < -DPAD_BOUNDS) {
                     data[ControlIDs.DPAD_UP] = 0x01;
                 } else {
                     data[ControlIDs.DPAD_UP] = 0x00;
@@ -316,7 +314,7 @@ public class Protocol {
         }
 
         // create the binary string with crc at the end
-        public byte[] toBits(){
+        public byte[] toBits() {
 //            Log.d(TAG, "Data: " + Arrays.toString(data));
             byte[] bits = new byte[11];
 
@@ -365,21 +363,21 @@ public class Protocol {
 
             // the 2 bit crc
             byte[] dataBare = new byte[9];
-            for (int i = 0; i < dataBare.length; i++){
+            for(int i = 0; i < dataBare.length; i++) {
                 dataBare[i] = bits[i];
             }
-            short crc16 = (short)CRC16CCITT.crc16(dataBare);
-            bits[9] = (byte)(crc16 & 0xff);
-            bits[10] = (byte)((crc16 >> 8) & 0xff);
+            short crc16 = (short) CRC16CCITT.crc16(dataBare);
+            bits[9] = (byte) (crc16 & 0xff);
+            bits[10] = (byte) ((crc16 >> 8) & 0xff);
 
             return bits;
         }
 
         // return a printable string, for debugging
-        public String toString(){
+        public String toString() {
             String str = "";
-            for (int i = 0; i < data.length; i++){
-                str = str +"\n" +i +": " +data[i];
+            for(int i = 0; i < data.length; i++) {
+                str = str + "\n" + i + ": " + data[i];
             }
             return str;
         }
@@ -393,11 +391,11 @@ public class Protocol {
             // ping every x seconds
             double pingFrequency = 2D;
             // while thread can send
-            while (!Thread.interrupted() && !socket_send.isClosed()){
-                if (System.currentTimeMillis() - lastTime > pingFrequency){
+            while(!Thread.interrupted() && !socket_send.isClosed()) {
+                if(System.currentTimeMillis() - lastTime > pingFrequency) {
                     //ping
                     // magic number
-                    byte [] b = { ((byte)(26)) };
+                    byte[] b = {((byte) (26))};
                     try {
                         socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT_SEND));
                     } catch(IOException e) {
@@ -408,7 +406,7 @@ public class Protocol {
                     // sleep for majority of the frequency
                     try {
                         Thread.sleep((long) (pingFrequency * .95));
-                    } catch (InterruptedException e) {
+                    } catch(InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
@@ -419,7 +417,7 @@ public class Protocol {
     // recieve data from robot
     private class ReceiveWorker implements Runnable {
         @Override
-        public void run(){
+        public void run() {
             // initialize socket on dedicated thread
             try {
                 socket_receive.bind(new InetSocketAddress(ROBOT_PORT_RECEIVE));
@@ -434,9 +432,9 @@ public class Protocol {
                 DatagramPacket temp_data = new DatagramPacket(temp_bytes, temp_bytes.length);
 
                 // receive the data
-                try{
+                try {
                     socket_receive.receive(temp_data);
-                } catch (IOException e){
+                } catch(IOException e) {
                     Log.d("tag", "error in receive data occured or no data received.... not sure");
                     continue;
                 }
@@ -447,8 +445,8 @@ public class Protocol {
                 // 2-3 = crc
                 // TODO check the crc
                 // handle the actual data
-                receiveData.setDeadMansDown( temp_bytes[0] != 0 );
-                receiveData.setVoltage( temp_bytes[1] );
+                receiveData.setDeadMansDown(temp_bytes[0] != 0);
+                receiveData.setVoltage(temp_bytes[1]);
             }
         }
     }
