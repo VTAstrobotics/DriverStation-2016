@@ -29,6 +29,8 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
     public final static int SIZE_BEST_FIT   = 4;
     public final static int SIZE_FULLSCREEN = 8;
 
+    private final static String TAG = "MjpegView";
+
     private MjpegViewThread thread;
     private MjpegInputStream mIn = null;
     private String inputStreamUrl = null;
@@ -101,6 +103,10 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
             // custom stuff
             // find the stream based on the url
             mIn = MjpegInputStream.read(inputStreamUrl);
+            if(mIn == null) {
+                Log.e(TAG, "Failed to create MJPEG stream");
+                return;
+            }
 
             PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.DST_OVER);
             Bitmap bm;
@@ -117,10 +123,10 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
                         synchronized (mSurfaceHolder) {
                             try {
                                 bm = null;
-                                try {
-                                    bm = mIn.readMjpegFrame();
-                                } catch (NullPointerException e){
-                                    Log.d("MjpegView", "mIn was null!");
+                                bm = mIn.readMjpegFrame();
+                                if(bm == null) {
+                                    Log.d(TAG, "Received null camera frame");
+                                    continue;
                                 }
                                 destRect = destRect(bm.getWidth(),bm.getHeight());
                                 c.drawColor(Color.BLACK);
