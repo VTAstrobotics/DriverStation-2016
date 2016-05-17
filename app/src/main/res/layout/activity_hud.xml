@@ -2,6 +2,12 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="#0099cc" tools:context=".HUDActivity">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/logo" android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" android:src="@drawable/astrobotics_logo"
+        android:adjustViewBounds="false" android:alpha="0.25"/>
     <org.astrobotics.ds2016.io.MjpegView
         android:id="@+id/stream"
         android:layout_alignParentLeft="true"
