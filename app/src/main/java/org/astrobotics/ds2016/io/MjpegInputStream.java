@@ -3,101 +3,74 @@ package org.astrobotics.ds2016.io;
 /**
  * Created by Skylar on 2/8/2016.
  */
-import java.io.BufferedInputStream;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.Properties;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-public class MjpegInputStream extends DataInputStream {
-    private final byte[] SOI_MARKER = { (byte) 0xFF, (byte) 0xD8 };
-    private final byte[] EOF_MARKER = { (byte) 0xFF, (byte) 0xD9 };
-    private final String CONTENT_LENGTH = "Content-Length";
-    private final static int HEADER_MAX_LENGTH = 100;
-    private final static int FRAME_MAX_LENGTH = 40000 + HEADER_MAX_LENGTH;
-    private int mContentLength = -1;
+public class MjpegInputStream {
+    private static final byte[] SOI_MARKER = {(byte) 0xFF, (byte) 0xD8};
+    private DataInputStream mStream;
+    private byte[] mImageBytes = new byte[0];
 
-    public static MjpegInputStream read(String url){
+    public static MjpegInputStream read(String url) {
         MjpegInputStream stream = null;
         try {
             URL urll = new URL(url);
             try {
                 HttpURLConnection htuc = (HttpURLConnection) urll.openConnection();
                 stream = new MjpegInputStream(htuc.getInputStream());
-            } catch (IOException e) {
+            } catch(IOException e) {
                 e.printStackTrace();
             }
-        } catch (MalformedURLException e){
+        } catch(MalformedURLException e) {
             e.printStackTrace();
         }
         return stream;
-/*
-        HttpResponse res;
-        DefaultHttpClient httpclient = new DefaultHttpClient();
-        try {
-            res = httpclient.execute(new HttpGet(URI.create(url)));
-            return new MjpegInputStream(res.getEntity().getContent());
-        } catch (ClientProtocolException e) {
-        } catch (IOException e) {}
-        return null;
-        */
     }
 
-    public MjpegInputStream(InputStream in) { super(new BufferedInputStream(in, FRAME_MAX_LENGTH)); }
-
-    private int getEndOfSeqeunce(DataInputStream in, byte[] sequence) throws IOException {
-        int seqIndex = 0;
-        byte c;
-        for(int i=0; i < FRAME_MAX_LENGTH; i++) {
-            c = (byte) in.readUnsignedByte();
-            if(c == sequence[seqIndex]) {
-                seqIndex++;
-                if(seqIndex == sequence.length) return i + 1;
-            } else seqIndex = 0;
-        }
-        return -1;
-    }
-
-    private int getStartOfSequence(DataInputStream in, byte[] sequence) throws IOException {
-        int end = getEndOfSeqeunce(in, sequence);
-        return (end < 0) ? (-1) : (end - sequence.length);
-    }
-
-    private int parseContentLength(byte[] headerBytes) throws IOException, NumberFormatException {
-        ByteArrayInputStream headerIn = new ByteArrayInputStream(headerBytes);
-        Properties props = new Properties();
-        props.load(headerIn);
-        return Integer.parseInt(props.getProperty(CONTENT_LENGTH));
+    public MjpegInputStream(InputStream in) {
+        mStream = new DataInputStream(in);
     }
 
     public Bitmap readMjpegFrame() throws IOException {
-        mark(FRAME_MAX_LENGTH);
-        int headerLen = getStartOfSequence(this, SOI_MARKER);
-        reset();
-        byte[] header = new byte[headerLen];
-        readFully(header);
-        try {
-            mContentLength = parseContentLength(header);
-        } catch (NumberFormatException nfe) {
-            mContentLength = getEndOfSeqeunce(this, EOF_MARKER);
+        PipedInputStream pInput = new PipedInputStream();
+        PipedOutputStream pOutput = new PipedOutputStream(pInput);
+
+        // Read until JPEG start sequence
+        int index = 0;
+        byte[] buf = new byte[1];
+        while(index != SOI_MARKER.length) {
+            mStream.read(buf);
+            if(buf[0] == SOI_MARKER[index]) {
+                index++;
+            } else {
+                index = 0;
+            }
+            pOutput.write(buf);
         }
-        reset();
-        byte[] frameData = new byte[mContentLength];
-        skipBytes(headerLen);
-        readFully(frameData);
-        return BitmapFactory.decodeStream(new ByteArrayInputStream(frameData));
+
+        pOutput.close();
+        Properties props = new Properties();
+        props.load(pInput);
+        int length = Integer.parseInt(props.getProperty("Content-Length"));
+
+        if(mImageBytes.length < length) {
+            mImageBytes = new byte[length];
+        }
+        System.arraycopy(SOI_MARKER, 0, mImageBytes, 0, SOI_MARKER.length);
+        mStream.readFully(mImageBytes, SOI_MARKER.length, length - SOI_MARKER.length);
+
+        return BitmapFactory.decodeStream(new ByteArrayInputStream(mImageBytes));
     }
 }
