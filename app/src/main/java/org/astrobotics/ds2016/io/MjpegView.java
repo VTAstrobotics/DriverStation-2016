@@ -122,6 +122,7 @@ public class MjpegView extends SurfaceView implements SurfaceHolder.Callback {
             Paint p = new Paint();
             String fps = "";
             while(mRun) {
+                c = null;
                 if(surfaceDone) {
                     try {
                         // First try reading the frame
