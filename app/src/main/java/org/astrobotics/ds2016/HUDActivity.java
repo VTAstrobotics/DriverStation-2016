@@ -3,13 +3,20 @@ package org.astrobotics.ds2016;
 import java.io.IOException;
 
 import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.hardware.input.InputManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -18,6 +25,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.astrobotics.ds2016.io.MjpegView;
@@ -27,10 +35,12 @@ public class HUDActivity extends AppCompatActivity {
     private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_BRAKE,
             MotionEvent.AXIS_GAS, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
+    private static final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+    private static final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+
     private Protocol protocol;
     private MjpegView mjpegView;
-    private final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
-    private final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+    private BroadcastReceiver wifiReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +101,9 @@ public class HUDActivity extends AppCompatActivity {
         }, null);
         updateGamepadStatus();
 
+        wifiReceiver = new WifiChangedReceiver();
+        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
+
         // how to set up GUI
         // take existing activity
         // Add the mjpeg view into activity.xml
@@ -105,6 +118,12 @@ public class HUDActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(wifiReceiver);
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -205,5 +224,36 @@ public class HUDActivity extends AppCompatActivity {
             }
         }
         setIndicator(R.id.controller_status, false);
+    }
+
+    private void updateWifiInfo(WifiInfo info) {
+        String wifiText = "Wifi: ";
+        if(info == null) {
+            wifiText += "<font color='red'>DISCONNECTED</font>";
+        } else {
+            String ssid = info.getSSID();
+            wifiText += "<font color='green'>" + ssid.substring(1, ssid.length() - 1) + "</font>";
+        }
+        ((TextView)findViewById(R.id.wifiLabel)).setText(Html.fromHtml(wifiText));
+    }
+
+    private class WifiChangedReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(!intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                return;
+            }
+            NetworkInfo netInfo = (NetworkInfo)intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+            if(netInfo.getState() == NetworkInfo.State.CONNECTED) {
+                WifiInfo wifiInfo = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+                if(wifiInfo.getSSID().equals("<unknown ssid>")) {
+                    updateWifiInfo(null);
+                } else {
+                    updateWifiInfo(wifiInfo);
+                }
+            } else if(netInfo.getState() == NetworkInfo.State.DISCONNECTED){
+                updateWifiInfo(null);
+            }
+        }
     }
 }

@@ -12,6 +12,11 @@
                     <solid android:color="#00FF00" />
                 </shape>
             </item>
+            <item android:maxLevel="2">
+                <shape android:shape="oval">
+                    <solid android:color="#0000FF" />
+                </shape>
+            </item>
         </level-list>
     </item>
     <item android:id="@+id/indicator_icon" android:drawable="@android:drawable/ic_delete"/>
