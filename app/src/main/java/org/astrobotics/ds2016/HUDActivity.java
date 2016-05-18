@@ -35,8 +35,10 @@ public class HUDActivity extends AppCompatActivity {
     private static final int[] AXES = new int[] {MotionEvent.AXIS_X, MotionEvent.AXIS_Y,
             MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, MotionEvent.AXIS_BRAKE,
             MotionEvent.AXIS_GAS, MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y};
-    private static final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
-    private static final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16";
+
+    // Resolution 8 = 320x240, Rate 6 = 10 fps
+    private static final String url_left = "http://10.0.0.51/videostream.cgi?user=VTAstrobot&pwd=RoVER16&resolution=8&rate=6";
+    private static final String url_right = "http://10.0.0.50/videostream.cgi?user=VTAstrobot&pwd=RoVER16&resolution=8&rate=6";
 
     private Protocol protocol;
     private MjpegView mjpegView;
