@@ -22,7 +22,7 @@ public class Protocol {
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
     private static InetAddress ROBOT_ADDRESS = null;
 
-    private DatagramSocket socket_send, socket_receive;
+    private DatagramSocket socket_send, socket_ping, socket_receive;
     private LinkedBlockingQueue<ControlData> sendQueue;
     private Thread sendThread, pinging, receiving;
 
@@ -43,10 +43,6 @@ public class Protocol {
         // send socket creation
         socket_send = new DatagramSocket();
         socket_send.setReuseAddress(true);
-        // receive socket creation
-        socket_receive = new DatagramSocket();
-        socket_receive.setReuseAddress(true);
-
         // instantiate sendqueue
         sendQueue = new LinkedBlockingQueue<>();
         // send thread instantaite and begin
@@ -55,10 +51,16 @@ public class Protocol {
         // create the control data object
         controlData = new ControlData();
 
+        // ping socket creation
+        socket_ping = new DatagramSocket();
+        socket_ping.setReuseAddress(true);
         // ping thread instantiate and begin
         pinging = new Thread(new PingWorker(), "Ping Thread");
 //        pinging.start(); // TODO verify pinging works
 
+        // receive socket creation
+        socket_receive = new DatagramSocket();
+        socket_receive.setReuseAddress(true);
         // receiving thread instantate and begin
         receiving = new Thread(new ReceiveWorker(), "Receive Thread");
 //        receiving.start(); // TODO verify receiving works
@@ -389,26 +391,26 @@ public class Protocol {
             // variables
             double lastTime = System.currentTimeMillis();
             // ping every x seconds
-            double pingFrequency = 2D;
+            double pingFrequency = 2;
             // while thread can send
-            while(!Thread.interrupted() && !socket_send.isClosed()) {
+            while(!Thread.interrupted() && !socket_ping.isClosed()) {
                 if(System.currentTimeMillis() - lastTime > pingFrequency) {
                     //ping
                     // magic number
-                    byte[] b = {((byte) (26))};
+                    byte[] b = {((byte) (216))};
                     try {
                         socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT_SEND));
                     } catch(IOException e) {
                         e.printStackTrace();
                     }
-                    //reset time
-                    lastTime = System.currentTimeMillis();
-                    // sleep for majority of the frequency
+                    // sleep for majority of the remaining frequency
                     try {
-                        Thread.sleep((long) (pingFrequency * .95));
+                        Thread.sleep((long) ((lastTime + pingFrequency - System.currentTimeMillis())));
                     } catch(InterruptedException e) {
                         e.printStackTrace();
                     }
+                    //reset time
+                    lastTime = System.currentTimeMillis();
                 }
             }
         }
