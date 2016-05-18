@@ -20,6 +20,8 @@ public class Protocol {
     //    private static final String TAG = "Astro-Proto-2016";
     private static final int DEADMAN = KeyEvent.KEYCODE_BUTTON_L1;
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
+    private static final int ROBOT_PING_SEND = 6900;
+    private static final int PING_FREQUENCY = 200; // 5 times per second
     private static InetAddress ROBOT_ADDRESS = null;
 
     private DatagramSocket socket_send, socket_ping, socket_receive;
@@ -56,7 +58,7 @@ public class Protocol {
         socket_ping.setReuseAddress(true);
         // ping thread instantiate and begin
         pinging = new Thread(new PingWorker(), "Ping Thread");
-//        pinging.start(); // TODO verify pinging works
+        pinging.start(); // TODO verify pinging works
 
         // receive socket creation
         socket_receive = new DatagramSocket();
@@ -390,22 +392,23 @@ public class Protocol {
         public void run() {
             // variables
             double lastTime = System.currentTimeMillis();
-            // ping every x seconds
-            double pingFrequency = 2;
             // while thread can send
             while(!Thread.interrupted() && !socket_ping.isClosed()) {
-                if(System.currentTimeMillis() - lastTime > pingFrequency) {
+                if(System.currentTimeMillis() - lastTime > PING_FREQUENCY) {
                     //ping
                     // magic number
                     byte[] b = {((byte) (216))};
                     try {
-                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PORT_SEND));
+                        socket_send.send(new DatagramPacket(b, 1, ROBOT_ADDRESS, ROBOT_PING_SEND));
                     } catch(IOException e) {
                         e.printStackTrace();
                     }
                     // sleep for majority of the remaining frequency
                     try {
-                        Thread.sleep((long) ((lastTime + pingFrequency - System.currentTimeMillis())));
+                        long timeToWait = (long)(lastTime + PING_FREQUENCY - System.currentTimeMillis());
+                        if(timeToWait > 0) {
+                            Thread.sleep(timeToWait);
+                        }
                     } catch(InterruptedException e) {
                         e.printStackTrace();
                     }
