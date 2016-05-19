@@ -43,6 +43,7 @@ public class HUDActivity extends AppCompatActivity {
     private Protocol protocol;
     private MjpegView mjpegView;
     private BroadcastReceiver wifiReceiver;
+    private boolean oldRobotUp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +73,7 @@ public class HUDActivity extends AppCompatActivity {
 
         try {
             protocol = new Protocol();
+            protocol.startConnChecker(this);
         } catch(IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error initializing network protocol", Toast.LENGTH_LONG).show();
@@ -170,6 +172,18 @@ public class HUDActivity extends AppCompatActivity {
             return true;
         }
         return super.onGenericMotionEvent(event);
+    }
+
+    public void setRobotUp(final boolean robotUp) {
+        if(robotUp != oldRobotUp) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setIndicator(R.id.robot_status, robotUp);
+                }
+            });
+            oldRobotUp = robotUp;
+        }
     }
 
     // Sets indicator icon

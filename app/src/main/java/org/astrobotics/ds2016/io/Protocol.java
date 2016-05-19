@@ -5,13 +5,17 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+
+import org.astrobotics.ds2016.HUDActivity;
 
 /**
  * Implements the network protocol
@@ -22,11 +26,12 @@ public class Protocol {
     private static final int ROBOT_PORT_SEND = 6800, ROBOT_PORT_RECEIVE = 6850;
     private static final int ROBOT_PING_SEND = 6900;
     private static final int PING_FREQUENCY = 200; // 5 times per second
+    private static final int CONNCHECK_FREQUENCY = 2000; // every 2 seconds
     private static InetAddress ROBOT_ADDRESS = null;
 
     private DatagramSocket socket_send, socket_ping, socket_receive;
     private LinkedBlockingQueue<ControlData> sendQueue;
-    private Thread sendThread, pinging, receiving;
+    private Thread sendThread, pinging, receiving, connCheck;
 
     // instance of current control data
     private ControlData controlData;
@@ -68,6 +73,14 @@ public class Protocol {
 //        receiving.start(); // TODO verify receiving works
         // create the receive data
         receiveData = new ReceiveData();
+    }
+
+    public void startConnChecker(HUDActivity hudActivity) {
+        if(connCheck != null) {
+            connCheck.interrupt();
+        }
+        connCheck = new Thread(new ConnCheckWorker(hudActivity), "Connectivity Check Thread");
+        connCheck.start();
     }
 
     public void setStick(int axis, float value) {
@@ -485,6 +498,44 @@ public class Protocol {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private class ConnCheckWorker implements Runnable {
+        private HUDActivity hudActivity;
+
+        public ConnCheckWorker(HUDActivity hudActivity) {
+            this.hudActivity = hudActivity;
+        }
+
+        @Override
+        public void run() {
+            while(!Thread.interrupted()) {
+                boolean robotUp = checkHost(ROBOT_ADDRESS);
+                hudActivity.setRobotUp(robotUp);
+                try {
+                    Thread.sleep(CONNCHECK_FREQUENCY);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        /**
+         * Check by testing port 22 (SSH) on the given host
+         */
+        public boolean checkHost(InetAddress addr) {
+            try {
+                Socket test = new Socket();
+                test.connect(new InetSocketAddress(addr, 22), 200); // timeout after 200ms
+                test.close();
+                return true;
+            } catch(SocketTimeoutException | SocketException e) {
+                // Ignore these
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+            return false;
         }
     }
 }
