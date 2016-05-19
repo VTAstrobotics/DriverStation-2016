@@ -403,17 +403,17 @@ public class Protocol {
                     } catch(IOException e) {
                         e.printStackTrace();
                     }
-                    // sleep for majority of the remaining frequency
-                    try {
-                        long timeToWait = (long)(lastTime + PING_FREQUENCY - System.currentTimeMillis());
-                        if(timeToWait > 0) {
-                            Thread.sleep(timeToWait);
-                        }
-                    } catch(InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     //reset time
                     lastTime = System.currentTimeMillis();
+                }
+                // sleep for majority of the remaining frequency
+                try {
+                    long timeToWait = (long) (lastTime + PING_FREQUENCY - System.currentTimeMillis());
+                    if(timeToWait > 0) {
+                        Thread.sleep(timeToWait);
+                    }
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }
