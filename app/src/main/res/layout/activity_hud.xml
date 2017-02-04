@@ -42,42 +42,14 @@
         android:layout_margin="4dp"
         android:background="@drawable/indicator"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignTop="@+id/stream_buttons"
-        android:layout_gravity="center" android:layout_toLeftOf="@+id/stream_buttons"
-        android:layout_toStartOf="@+id/stream_buttons"
-        android:gravity="center" android:text="@string/cam_left"
-        android:textColor="@color/cam_text_color"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/stream_buttons"
-        android:layout_centerHorizontal="true"
-        android:text="@string/cam_none" android:textColor="@color/cam_text_color"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignTop="@+id/stream_buttons"
-        android:layout_gravity="center"
-        android:layout_toEndOf="@+id/stream_buttons" android:layout_toRightOf="@+id/stream_buttons"
-        android:gravity="center" android:text="@string/cam_right"
-        android:textColor="@color/cam_text_color"/>
-
     <RadioGroup
         android:id="@+id/stream_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:layout_gravity="bottom"
         android:backgroundTint="#505bf5"
-        android:orientation="horizontal">
+        android:orientation="vertical" android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true" android:layout_alignParentEnd="true">
         <RadioButton
             android:id="@+id/cam_left"
             android:layout_width="40dp"
@@ -88,7 +60,6 @@
             android:id="@+id/cam_none"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="bottom"
             android:buttonTint="#505bf5" android:checked="true"/>
         <RadioButton
             android:id="@+id/cam_right"
@@ -105,5 +76,37 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="@color/cam_text_color"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@+id/stream_buttons"
+        android:layout_toLeftOf="@+id/controller_status"
+        android:layout_alignTop="@+id/stream_buttons">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center" android:text="@string/cam_left"
+            android:textColor="@color/cam_text_color" android:layout_alignTop="@+id/stream_buttons"
+            android:layout_alignRight="@+id/logo" android:layout_alignEnd="@+id/logo"
+            android:id="@+id/cam_left_label" android:visibility="gone"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/stream_buttons"
+            android:layout_centerHorizontal="true"
+            android:text="@string/cam_none" android:textColor="@color/cam_text_color"
+            android:id="@+id/textView2" android:visibility="gone"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignTop="@+id/stream_buttons"
+            android:layout_gravity="center"
+            android:layout_toEndOf="@+id/stream_buttons" android:layout_toRightOf="@+id/stream_buttons"
+            android:gravity="center" android:text="@string/cam_right"
+            android:textColor="@color/cam_text_color" android:visibility="gone"/>
+    </LinearLayout>
 
 </RelativeLayout>
